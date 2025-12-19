@@ -29,6 +29,46 @@ from deepagents_cli.tools import fetch_url, http_request, web_search
 from deepagents_cli.ui import TokenTracker, show_help
 
 
+async def load_chatlas_mcp_tools():
+    """Load ChATLAS MCP tools if environment variables are set.
+    
+    Returns:
+        List of MCP tools or empty list if not configured
+    """
+    mcp_url = os.environ.get("CHATLAS_MCP_URL")
+    if not mcp_url:
+        return []
+    
+    try:
+        # Import chatlas_agents if available
+        from chatlas_agents.config import MCPServerConfig
+        from chatlas_agents.mcp import create_mcp_client_and_load_tools
+        
+        # Get timeout from environment
+        mcp_timeout = int(os.environ.get("CHATLAS_MCP_TIMEOUT", "60"))
+        
+        # Create config and load tools
+        config = MCPServerConfig(
+            url=mcp_url,
+            timeout=mcp_timeout,
+        )
+        
+        console.print(f"[dim]Loading ChATLAS MCP tools from {mcp_url}...[/dim]")
+        tools = await create_mcp_client_and_load_tools(config)
+        console.print(f"[green]✓ Loaded {len(tools)} ChATLAS MCP tools[/green]")
+        return tools
+    except ImportError:
+        console.print(
+            "[yellow]⚠ ChATLAS MCP configured but chatlas-agents not installed[/yellow]"
+        )
+        return []
+    except Exception as e:
+        console.print(
+            f"[yellow]⚠ Failed to load ChATLAS MCP tools: {e}[/yellow]"
+        )
+        return []
+
+
 def check_cli_dependencies() -> None:
     """Check if CLI optional dependencies are installed."""
     missing = []
@@ -299,6 +339,11 @@ async def _run_agent_session(
     tools = [http_request, fetch_url]
     if settings.has_tavily:
         tools.append(web_search)
+    
+    # Load ChATLAS MCP tools if configured
+    mcp_tools = await load_chatlas_mcp_tools()
+    if mcp_tools:
+        tools.extend(mcp_tools)
 
     agent, composite_backend = create_cli_agent(
         model=model,
