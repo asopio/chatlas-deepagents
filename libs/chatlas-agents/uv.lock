@@ -321,7 +321,7 @@ wheels = [
 [[package]]
 name = "chatlas-agents"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "deepagents" },
     { name = "deepagents-cli" },
@@ -341,7 +341,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "chatlas-agents", virtual = "." }]
+dev = [{ name = "chatlas-agents", editable = "." }]
 
 [[package]]
 name = "click"
