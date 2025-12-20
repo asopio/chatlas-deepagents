@@ -30,19 +30,16 @@ The skill provides a Python script that queries the ChATLAS MCP server and retur
 
 ### Basic Usage
 
-**Note:** Always use the absolute path from your skills directory (shown in the system prompt above).
+**Note:** This skill should be run using `uv run` from the chatlas-agents directory to ensure all dependencies are available.
 
-If running deepagents from a virtual environment:
 ```bash
-.venv/bin/python [YOUR_SKILLS_DIR]/chatlas-search/chatlas_search.py "your query" --vectorstore twiki_prod [--ndocs N]
+cd [CHATLAS_AGENTS_DIR]
+uv run [YOUR_SKILLS_DIR]/chatlas-search/chatlas_search.py "your query" --vectorstore twiki_prod [--ndocs N]
 ```
 
-Or for system Python:
-```bash
-python3 [YOUR_SKILLS_DIR]/chatlas-search/chatlas_search.py "your query" --vectorstore twiki_prod [--ndocs N]
-```
-
-Replace `[YOUR_SKILLS_DIR]` with the absolute skills directory path from your system prompt.
+Where:
+- `[CHATLAS_AGENTS_DIR]`: Path to the chatlas-agents package (e.g., `libs/chatlas-agents`)
+- `[YOUR_SKILLS_DIR]`: Absolute path to your skills directory (shown in the system prompt)
 
 **Arguments:**
 - `query` (required): The search query string (e.g., "photon calibration", "trigger menu")
@@ -53,22 +50,26 @@ Replace `[YOUR_SKILLS_DIR]` with the absolute skills directory path from your sy
 
 Search ATLAS Twiki for photon calibration:
 ```bash
-.venv/bin/python ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "photon calibration" --vectorstore twiki_prod --ndocs 5
+cd libs/chatlas-agents
+uv run ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "photon calibration" --vectorstore twiki_prod --ndocs 5
 ```
 
 Find papers about Higgs to diphoton:
 ```bash
-.venv/bin/python ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "Higgs diphoton" --vectorstore cds_v1
+cd libs/chatlas-agents
+uv run ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "Higgs diphoton" --vectorstore cds_v1
 ```
 
 Search Indico for trigger meetings:
 ```bash
-.venv/bin/python ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "trigger menu" --vectorstore indico_prod_v1
+cd libs/chatlas-agents
+uv run ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "trigger menu" --vectorstore indico_prod_v1
 ```
 
 Search ATLAS-TALK for software questions:
 ```bash
-.venv/bin/python ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "athena framework" --vectorstore atlas_talk_prod
+cd libs/chatlas-agents
+uv run ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py "athena framework" --vectorstore atlas_talk_prod
 ```
 
 ## Output Format
@@ -89,12 +90,16 @@ Results are ordered by relevance to the query.
 
 ## Dependencies
 
-This skill requires:
+This skill is designed to run with the `uv` package manager from the chatlas-agents directory.
+
+**Required packages** (managed by uv):
 - `httpx`: For HTTP requests to the MCP server
 - `langchain-mcp-adapters`: For MCP protocol communication
 - `chatlas-agents`: For MCP client functionality
 
-The skill will detect missing packages and show installation instructions.
+All dependencies are automatically available when using `uv run` from the chatlas-agents directory.
+
+If running outside of uv (not recommended), the skill will detect missing packages and show installation instructions.
 
 ## Environment Variables
 
