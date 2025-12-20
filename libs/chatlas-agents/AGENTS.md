@@ -43,7 +43,7 @@ chatlas-agents/
 
 ### MCP Integration
 
-The agent connects to an MCP server using JSON-RPC over HTTP (NOT REST or SSE).
+The agent connects to an MCP server using Streamable HTTP transport (JSON-RPC over HTTP with SSE for responses).
 
 **Important:**
 - MCP server endpoint: `https://chatlas-mcp.app.cern.ch/mcp`
@@ -254,7 +254,7 @@ Creates LLM instances from configuration.
 Handles connection to ChATLAS MCP server using `langchain-mcp-adapters`.
 
 **Key Points:**
-- Uses HTTP transport (not SSE)
+- Uses Streamable HTTP transport (JSON-RPC with SSE responses)
 - Creates sessions on-demand for tool invocation
 - Connects to `https://chatlas-mcp.app.cern.ch/mcp`
 

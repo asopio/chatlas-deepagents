@@ -60,9 +60,6 @@ htcondor_jobs/
 .DS_Store
 Thumbs.db
 
-# other packages source
-deepagents_source
-
 # Build artifacts and temporary files
 .atlas-pip/
 out.txt

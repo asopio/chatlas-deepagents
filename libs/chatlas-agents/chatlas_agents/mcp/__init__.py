@@ -2,6 +2,7 @@
 
 import logging
 import asyncio
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -26,18 +27,18 @@ async def create_mcp_client_and_load_tools(config: MCPServerConfig) -> List[Any]
     Raises:
         Exception: If connection to MCP server fails
     """
-    # Create HTTP connection configuration
-    # The server uses HTTP/HTTPS with JSON-RPC, not SSE
+    # Create Streamable HTTP connection configuration
+    # The server uses Streamable HTTP transport with SSE for responses
     connection = {
         "url": config.url,
-        "timeout": config.timeout,
-        "transport": "http",  # Use HTTP transport for JSON-RPC over HTTP
+        "timeout": timedelta(seconds=config.timeout),
+        "transport": "streamable_http",  # Use Streamable HTTP transport for MCP
     }
 
     if config.headers:
         connection["headers"] = config.headers
 
-    logger.debug(f"Connecting to MCP server at {config.url} using HTTP transport")
+    logger.debug(f"Connecting to MCP server at {config.url} using Streamable HTTP transport")
     logger.debug(f"Connection config: {connection}")
 
     # Create MCP client
@@ -123,8 +124,8 @@ def create_mcp_client(config: MCPServerConfig) -> MultiServerMCPClient:
     """
     connection = {
         "url": config.url,
-        "timeout": config.timeout,
-        "transport": "http",  # Use HTTP transport for JSON-RPC over HTTP
+        "timeout": timedelta(seconds=config.timeout),
+        "transport": "streamable_http",  # Use Streamable HTTP transport for MCP
     }
     
     if config.headers:
