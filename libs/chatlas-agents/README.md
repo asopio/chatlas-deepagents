@@ -6,6 +6,7 @@ AI agent framework for the ChATLAS AI RAG system using DeepAgents and LangChain.
 
 - 🚀 **DeepAgents Framework**: Built on LangChain's DeepAgents with planning, file operations, and sub-agent spawning
 - 🔌 **ChATLAS MCP Server**: Connect to ChATLAS Model Context Protocol server
+- 🎯 **ChATLAS Skills**: Pre-built skills for querying ATLAS documentation (see `skills/` directory)
 - 🐳 **Container Sandboxes**: Run agents in isolated containers for secure code execution (Docker & Apptainer)
 - ⚡ **HTCondor Integration**: Submit batch jobs to CERN's HTCondor batch farm system
 - 🧠 **Multiple LLM Backends**: Support for OpenAI, Anthropic Claude, and Groq
@@ -156,6 +157,37 @@ docker-compose logs -f
 # Stop the service
 docker-compose down
 ```
+
+## ChATLAS Skills
+
+ChATLAS agents come with pre-built skills for querying ATLAS documentation. Skills are reusable capabilities that provide specialized workflows.
+
+### Available Skills
+
+#### chatlas-search
+
+Search ATLAS experiment documentation using the ChATLAS RAG system.
+
+```bash
+# Copy the skill to your agent's skills directory
+mkdir -p ~/.deepagents/agent/skills
+cp -r libs/chatlas-agents/skills/chatlas-search ~/.deepagents/agent/skills/
+
+# The agent can now use the skill
+python3 ~/.deepagents/agent/skills/chatlas-search/chatlas_search.py \
+  "photon calibration" \
+  --vectorstore twiki_prod \
+  --ndocs 5
+```
+
+**Available vectorstores:**
+- `twiki_prod` - ATLAS Twiki technical documentation
+- `cds_v1` - CERN Document Server (papers, notes, talks)
+- `indico_prod_v1` - ATLAS Indico (meetings, presentations)
+- `atlas_talk_prod` - ATLAS-TALK forum posts
+- `mkdocs_prod_v1` - ATLAS public documentation
+
+For detailed documentation, see `skills/chatlas-search/SKILL.md` or `skills/README.md`.
 
 ## DeepAgents Features
 
