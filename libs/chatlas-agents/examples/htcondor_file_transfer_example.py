@@ -7,7 +7,6 @@ For comprehensive documentation, see FILE_TRANSFER_GUIDE.md
 """
 
 import shutil
-import time
 from pathlib import Path
 from chatlas_agents.htcondor import HTCondorJobSubmitter
 
@@ -79,10 +78,10 @@ def example_htcondor_with_network_storage():
     )
     
     # Custom command that uses network storage
-    custom_command = f"""
+    custom_command = """
 # Access network storage directly (no file transfer needed)
 python3 -m chatlas_agents.cli run \\
-    --input "Process {network_input} and save to {network_output}" \\
+    --input "Process """ + network_input + """ and save to """ + network_output + """" \\
     --docker-sandbox \\
     --docker-image atlas/athanalysis:latest
 """

@@ -6,7 +6,6 @@ when working with Docker or Apptainer sandboxes.
 For comprehensive documentation, see FILE_TRANSFER_GUIDE.md
 """
 
-import asyncio
 from pathlib import Path
 import tempfile
 import json
