@@ -180,6 +180,10 @@ chatlas --sandbox apptainer --sandbox-image docker://python:3.13-slim
 - **[.github/DEPENDENCY_ANALYSIS.md](.github/DEPENDENCY_ANALYSIS.md)** - Module dependency analysis and setup
 - **[.github/IMPLEMENTATION_SUMMARY_MCP.md](.github/IMPLEMENTATION_SUMMARY_MCP.md)** - MCP implementation summary
 
+**Sandbox & File Transfer:**
+- **[libs/chatlas-agents/FILE_TRANSFER_GUIDE.md](libs/chatlas-agents/FILE_TRANSFER_GUIDE.md)** - Comprehensive guide to file transfers between host and sandbox environments, including HTCondor integration
+- **[libs/chatlas-agents/SANDBOX.md](libs/chatlas-agents/SANDBOX.md)** - Sandbox backend documentation for Docker and Apptainer
+
 **Examples:**
 - **[examples/mcp_middleware_example.py](libs/chatlas-agents/examples/mcp_middleware_example.py)** - Working example with deepagents
 - **[examples/mcp_cli_integration_example.py](libs/chatlas-agents/examples/mcp_cli_integration_example.py)** - CLI integration patterns
@@ -187,6 +191,7 @@ chatlas --sandbox apptainer --sandbox-image docker://python:3.13-slim
 **Module Documentation:**
 - **[libs/chatlas-agents/README.md](libs/chatlas-agents/README.md)** - ChATLAS agents module documentation
 - **[libs/chatlas-agents/SETUP.md](libs/chatlas-agents/SETUP.md)** - Detailed setup instructions 
+
 
 
 ## TODO list for ChatLAS Agents
@@ -197,8 +202,8 @@ chatlas --sandbox apptainer --sandbox-image docker://python:3.13-slim
   - [ ] Not all tools seem to be available / configured properly with the chatlas agent. Web search tool seems to be missing, for example.
 - [ ] Properly set up docker and apptainer sandbox. 
   - [x] Sandboxes set up with new CLI and MCP middleware.
-  - [ ] Need to understand how to handle file transfers between host and sandbox. Implement this. 
-  - [ ] Set up and test HTCondor submission.
+  - [x] **COMPLETED**: Researched and documented file transfer handling between host and sandbox. See [FILE_TRANSFER_GUIDE.md](libs/chatlas-agents/FILE_TRANSFER_GUIDE.md) for comprehensive guide.
+  - [ ] Set up and test HTCondor submission with file transfers.
 - [ ] Interface with ATLAS software stack. Create local MCP, tools for ATLAS data sources: AMI, Rucio, Upcoming indico meetings
   - [ ] Simple, preliminary solution: use deepagents skills to wrap command line tools that access ATLAS data sources.
   - [ ] Longer term: create proper MCP server with tools for ATLAS data sources (can interface this with other agent providers eg. Copilot).

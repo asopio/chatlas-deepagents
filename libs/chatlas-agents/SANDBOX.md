@@ -6,6 +6,8 @@ This document describes the ChATLAS sandbox implementation and how it integrates
 
 The `chatlas_agents.sandbox` module provides container-based sandbox backends for secure code execution in DeepAgents. It supports both Docker and Apptainer (formerly Singularity), making it suitable for both local development and HPC environments like CERN's lxplus.
 
+**📖 For detailed information about file transfers between host and sandbox environments, see [FILE_TRANSFER_GUIDE.md](FILE_TRANSFER_GUIDE.md).**
+
 ## Architecture
 
 ### Backend Protocol
@@ -218,6 +220,55 @@ asetup Athena,22.0.25
 source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh
 ```
 
+## File Transfers
+
+All sandbox backends support standardized file upload and download operations through the `BackendProtocol`:
+
+### Upload Files
+
+```python
+# Upload files to sandbox
+responses = backend.upload_files([
+    ("/workspace/data.csv", csv_bytes),
+    ("/workspace/config.json", json_bytes),
+])
+
+# Check for errors
+for resp in responses:
+    if resp.error:
+        print(f"Upload failed: {resp.path} - {resp.error}")
+```
+
+### Download Files
+
+```python
+# Download files from sandbox
+responses = backend.download_files([
+    "/workspace/results/output.json",
+    "/workspace/logs/execution.log",
+])
+
+# Save to host
+for resp in responses:
+    if resp.error:
+        print(f"Download failed: {resp.path} - {resp.error}")
+    else:
+        Path(resp.path.lstrip("/")).write_bytes(resp.content)
+```
+
+### Implementation Details
+
+**Docker:** Uses `docker cp` to copy files between host and container.
+
+**Apptainer:** Uses `apptainer exec` with stdin/stdout redirection for file transfer.
+
+Both implementations support:
+- Batch operations with partial success
+- Standardized error codes (`file_not_found`, `permission_denied`, etc.)
+- Binary file transfer (no encoding issues)
+
+**📖 For comprehensive file transfer documentation, patterns, and HTCondor integration, see [FILE_TRANSFER_GUIDE.md](FILE_TRANSFER_GUIDE.md).**
+
 ## Comparison with deepagents-cli
 
 Our implementation follows the same patterns as deepagents-cli for consistency:
@@ -229,6 +280,7 @@ Our implementation follows the same patterns as deepagents-cli for consistency:
 | Setup scripts | ✅ | ✅ |
 | Env var expansion | ✅ | ✅ |
 | Auto cleanup | ✅ | ✅ |
+| File transfers | ✅ | ✅ |
 | Cloud providers | Modal, Runloop, Daytona | Docker, Apptainer |
 
 ## Examples
