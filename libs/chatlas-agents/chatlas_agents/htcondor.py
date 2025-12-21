@@ -3,6 +3,51 @@
 This module provides utilities for submitting ChATLAS agent jobs to CERN's HTCondor
 batch farm system. It generates HTCondor submit files and handles job submission.
 
+File Transfer:
+    HTCondor jobs running on remote execute nodes require multi-stage file transfers:
+    
+    1. Host → Submit Node: User uploads input files (manual or shared filesystem)
+    2. Submit Node → Execute Node: HTCondor's transfer_input_files
+    3. Execute Node → Submit Node: HTCondor's transfer_output_files  
+    4. Submit Node → Host: User downloads results
+    
+    See FILE_TRANSFER_GUIDE.md for comprehensive documentation on file transfer
+    patterns and best practices for HTCondor integration.
+
+Example:
+    Basic job submission with file transfers::
+    
+        from chatlas_agents.htcondor import HTCondorJobSubmitter
+        from pathlib import Path
+        import shutil
+        
+        # Prepare files on submit node
+        submit_dir = Path("/afs/cern.ch/user/u/username/jobs/job1")
+        submit_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy("input.csv", submit_dir / "input.csv")
+        
+        # Create submitter
+        submitter = HTCondorJobSubmitter(
+            docker_image="python:3.13-slim",
+            output_dir=submit_dir,
+        )
+        
+        # Generate submit file with file transfer config
+        submit_file = submitter.generate_submit_file(
+            job_name="my_job",
+            prompt="Process the data",
+            transfer_input_files="input.csv",
+            transfer_output_files="results/",
+        )
+        
+        # Submit job
+        cluster_id = submitter.submit_job(
+            job_name="my_job",
+            prompt="Process the data",
+            transfer_input_files="input.csv",
+            transfer_output_files="results/",
+        )
+
 Reference: https://batchdocs.web.cern.ch/local/submit.html
 """
 
