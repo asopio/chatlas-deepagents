@@ -6,6 +6,7 @@ file transfer configuration for remote execution on batch farm nodes.
 For comprehensive documentation, see FILE_TRANSFER_GUIDE.md
 """
 
+import shlex
 import shutil
 from pathlib import Path
 from chatlas_agents.htcondor import HTCondorJobSubmitter
@@ -69,6 +70,7 @@ def example_htcondor_with_network_storage():
     
     # For this example, we simulate network storage paths
     # In practice, these would be actual AFS/EOS paths
+    # SECURITY NOTE: In production, validate and sanitize these paths
     network_input = "/eos/project/atlas/data/input.root"
     network_output = "/eos/project/atlas/results/"
     
@@ -77,21 +79,26 @@ def example_htcondor_with_network_storage():
         output_dir=output_dir,
     )
     
-    # Custom command that uses network storage
-    custom_command = """
+    # Build command safely - in production, validate paths before use
+    # This example uses known-safe hardcoded paths
+    prompt = f"Process {network_input} and save to {network_output}"
+    custom_command = f"""
 # Access network storage directly (no file transfer needed)
 python3 -m chatlas_agents.cli run \\
-    --input "Process """ + network_input + """ and save to """ + network_output + """" \\
+    --input {shlex.quote(prompt)} \\
     --docker-sandbox \\
     --docker-image atlas/athanalysis:latest
 """
+    
+    # Escape command for HTCondor submit file
+    escaped_command = shlex.quote(custom_command)
     
     # Generate submit file
     submit_content = f"""# HTCondor submit file for {job_name}
 # Uses network storage instead of file transfers
 
 executable = /bin/bash
-arguments = -c "{custom_command}"
+arguments = -c {escaped_command}
 
 # Docker universe
 universe = docker
@@ -175,23 +182,27 @@ def example_htcondor_large_output():
     )
     
     # Custom command that compresses output
-    custom_command = """
+    # Using set -e to fail on any error
+    custom_command = """set -e
 # Run agent to generate large output
 python3 -m chatlas_agents.cli run \\
-    --input "Generate large analysis report" \\
+    --input 'Generate large analysis report' \\
     --docker-sandbox
 
 # Compress results before transfer
 cd /workspace
 tar czf results.tar.gz results/
 
-echo "Compressed results created"
+echo 'Compressed results created'
 """
+    
+    # Escape command for HTCondor submit file
+    escaped_command = shlex.quote(custom_command)
     
     submit_content = f"""# HTCondor submit file with output compression
 
 executable = /bin/bash
-arguments = -c "{custom_command}"
+arguments = -c {escaped_command}
 
 universe = docker
 docker_image = python:3.13-slim

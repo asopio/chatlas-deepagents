@@ -457,18 +457,26 @@ Best for: Small text files, configuration
 ```python
 # Embed small files as base64 in job command
 import base64
+import shlex
 
 config_content = """
 model: gpt-4
 temperature: 0.7
 """
 
+# Encode and validate
 config_b64 = base64.b64encode(config_content.encode()).decode()
+# Ensure it only contains safe base64 characters
+assert all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=' for c in config_b64)
 
-# Generate submit file with file creation command
+# Generate submit file with file creation command - use shlex.quote for safety
+config_creation_cmd = f"echo {config_b64} | base64 -d > /workspace/config.yaml"
+agent_cmd = "python -m chatlas_agents.cli run --input 'Process data'"
+full_command = f"{config_creation_cmd} && {agent_cmd}"
+
 submit_content = f"""
 executable = /bin/bash
-arguments = -c "echo {config_b64} | base64 -d > /workspace/config.yaml && python -m chatlas_agents.cli run --input 'Process data'"
+arguments = -c {shlex.quote(full_command)}
 """
 ```
 
@@ -515,8 +523,13 @@ def wait_for_job_completion(submitter, cluster_id, timeout=3600):
     
     return False
 
-def retrieve_results(job_dir: Path) -> dict:
-    """Retrieve all result files from job directory."""
+def retrieve_results(job_dir: Path, cluster_id: str) -> dict:
+    """Retrieve all result files from job directory.
+    
+    Args:
+        job_dir: Path to the job output directory
+        cluster_id: HTCondor cluster ID (e.g., "12345")
+    """
     results = {}
     
     # Read output files
@@ -540,8 +553,11 @@ def retrieve_results(job_dir: Path) -> dict:
     return results
 
 # Usage
+cluster_id = "12345"  # From condor_submit output
+job_dir = Path("./htcondor_examples/basic_job")
+
 if wait_for_job_completion(submitter, cluster_id):
-    results = retrieve_results(job_dir)
+    results = retrieve_results(job_dir, cluster_id)
     
     # Process results
     for file_path, content in results["output_files"].items():
