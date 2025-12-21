@@ -70,18 +70,40 @@ def example_htcondor_with_network_storage():
     
     # For this example, we simulate network storage paths
     # In practice, these would be actual AFS/EOS paths
-    # SECURITY NOTE: In production, validate and sanitize these paths
     network_input = "/eos/project/atlas/data/input.root"
     network_output = "/eos/project/atlas/results/"
+    
+    # SECURITY: In production, validate paths before use
+    def validate_network_path(path: str) -> bool:
+        """Validate that path is safe and authorized.
+        
+        In production:
+        - Check path is within allowed prefixes (/eos/project/atlas/)
+        - Verify no path traversal attempts (../)
+        - Ensure user has access rights
+        """
+        allowed_prefixes = ["/eos/project/atlas/", "/afs/cern.ch/"]
+        if not any(path.startswith(prefix) for prefix in allowed_prefixes):
+            raise ValueError(f"Unauthorized path: {path}")
+        if ".." in path:
+            raise ValueError(f"Path traversal detected: {path}")
+        return True
+    
+    # Validate paths (this example uses hardcoded safe paths)
+    validate_network_path(network_input)
+    validate_network_path(network_output)
     
     submitter = HTCondorJobSubmitter(
         docker_image="atlas/athanalysis:latest",
         output_dir=output_dir,
     )
     
-    # Build command safely - in production, validate paths before use
-    # This example uses known-safe hardcoded paths
-    prompt = f"Process {network_input} and save to {network_output}"
+    # Build prompt safely - quote paths even though they're hardcoded in this example
+    prompt_input = shlex.quote(network_input)
+    prompt_output = shlex.quote(network_output)
+    prompt = f"Process {prompt_input} and save to {prompt_output}"
+    
+    # Build command - use shlex.quote for the prompt
     custom_command = f"""
 # Access network storage directly (no file transfer needed)
 python3 -m chatlas_agents.cli run \\

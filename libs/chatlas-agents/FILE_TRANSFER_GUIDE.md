@@ -466,8 +466,9 @@ temperature: 0.7
 
 # Encode and validate
 config_b64 = base64.b64encode(config_content.encode()).decode()
-# Ensure it only contains safe base64 characters
-assert all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=' for c in config_b64)
+# Validate base64 characters (don't use assert - it's removed with -O flag)
+if not all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=' for c in config_b64):
+    raise ValueError("Invalid base64 content - contains non-base64 characters")
 
 # Generate submit file with file creation command - use shlex.quote for safety
 config_creation_cmd = f"echo {config_b64} | base64 -d > /workspace/config.yaml"
