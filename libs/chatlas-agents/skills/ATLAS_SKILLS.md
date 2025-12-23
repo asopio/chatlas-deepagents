@@ -69,6 +69,30 @@ rucio add-rule <dataset_name> 1 <RSE>
 
 ---
 
+### 4. Indico Meetings (`indico-meetings`)
+
+**Purpose:** Fetch ATLAS meeting agendas, slides, and abstracts from CERN Indico.
+
+**Use when you need to:**
+- Get summary of upcoming ATLAS meetings (today/this week)
+- Find meeting agendas and schedules for specific date ranges
+- Download slides and presentation materials from conferences/workshops
+- Extract talk abstracts and speaker information
+- Track ATLAS meeting history or plan for future meetings
+
+**Key Commands:**
+```bash
+python3 indico_meetings.py upcoming --today
+python3 indico_meetings.py category 12592 --from 2024-01-01 --to 2024-01-31
+python3 indico_meetings.py download <event_id> --output ./downloads
+```
+
+**Prerequisites:** None required for public meetings. Optional authentication for protected meetings via API token from https://indico.cern.ch/user/tokens/
+
+**Learn more:** [indico-meetings/SKILL.md](./indico-meetings/SKILL.md)
+
+---
+
 ## Using These Skills with DeepAgents
 
 ### Installation
