@@ -24,3 +24,7 @@ pyyaml>=6.0.0
 # CLI support
 typer>=0.12.0
 rich>=13.0.0
+
+# Evaluation and monitoring
+opik>=0.2.0
+pandas>=2.0.0
