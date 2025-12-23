@@ -27,7 +27,7 @@ def check_dependencies():
         import urllib.parse
         import urllib.error
     except ImportError:
-        return "Error: urllib not available (should be part of standard library)"
+        return "Error: Failed to import required urllib modules"
     return None
 
 
@@ -60,8 +60,6 @@ def build_indico_request(
     str
         Full URL with authentication parameters
     """
-    import urllib.parse
-    
     items = list(params.items())
     
     # Legacy authentication with API key/secret
@@ -77,6 +75,26 @@ def build_indico_request(
     if not items:
         return path
     return '%s?%s' % (path, urllib.parse.urlencode(items))
+
+
+def sanitize_filename(name: str) -> str:
+    """Sanitize a string for use as a filename or directory name.
+    
+    Parameters
+    ----------
+    name : str
+        Original name to sanitize
+        
+    Returns
+    -------
+    str
+        Sanitized name safe for filesystem use
+    """
+    # Remove non-alphanumeric characters except spaces, hyphens, underscores
+    safe_name = re.sub(r'[^\w\s-]', '_', name).strip()
+    # Replace multiple spaces/hyphens with single underscore
+    safe_name = re.sub(r'[-\s]+', '_', safe_name)
+    return safe_name
 
 
 def get_upcoming_meetings(
@@ -109,9 +127,6 @@ def get_upcoming_meetings(
     str
         Markdown-formatted summary of upcoming meetings.
     """
-    import urllib.request
-    import urllib.error
-    
     try:
         # Calculate date range
         today = datetime.now()
@@ -224,9 +239,6 @@ def get_category_meetings(
     str
         Markdown-formatted list of meetings.
     """
-    import urllib.request
-    import urllib.error
-    
     try:
         # Build API request
         path = '/export/categ/%s.json' % category_id
@@ -346,9 +358,6 @@ def download_event_materials(
     str
         Summary of downloaded materials in markdown format.
     """
-    import urllib.request
-    import urllib.error
-    
     try:
         # Create output directory
         output_path = Path(output_dir)
@@ -382,8 +391,7 @@ def download_event_materials(
         event_title = event.get("title", f"event_{event_id}")
 
         # Sanitize event title for directory name
-        safe_title = re.sub(r'[^\w\s-]', '_', event_title).strip()
-        safe_title = re.sub(r'[-\s]+', '_', safe_title)
+        safe_title = sanitize_filename(event_title)
         event_dir = output_path / safe_title
         event_dir.mkdir(parents=True, exist_ok=True)
 
@@ -458,7 +466,7 @@ def download_event_materials(
 
                                     # Determine file extension from URL or content-type
                                     ext = Path(download_url).suffix or ".bin"
-                                    safe_filename = re.sub(r'[^\w\s-]', '_', file_title).strip()
+                                    safe_filename = sanitize_filename(file_title)
                                     safe_filename = f"contrib_{idx:03d}_{safe_filename}{ext}"
                                     file_path = event_dir / safe_filename
 
