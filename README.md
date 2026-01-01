@@ -32,6 +32,7 @@ ChATLAS-specific features can be found in `libs/chatlas-agents`.
 ### v0.4+
 - [ ] Add GitLab remote. Set up CI/CD. Would be cool to have agents running in GitLab runners, eg. to produce automated reviews of paper latex sources.
   - Example: [Qwen-code GitHub actions](https://github.com/QwenLM/qwen-code-action) provides automated workflow for delegating tasks to agents, triggered thorugh local CLI commands or issue requests, and automatically places pull request on completion. Could be adapted to equivalent gitlab feaures through [GitLab MCP tools](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server_tools/).     
+- [ ] Integration of CLI with IDEs and other high-level interfaces through _Agent Client Protocol_ (see, for eaxmple, [__Qwen Code__ integration in Zed IDE](https://qwenlm.github.io/qwen-code-docs/en/users/integration-zed/) which can be used with own Open AI API keys, or [__Mistral Vibe__ simpler python-based ACP](https://github.com/mistralai/mistral-vibe/tree/main/vibe/acp).   
 
 ## Quick Start
 
