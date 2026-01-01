@@ -261,6 +261,7 @@ Set `TAVILY_API_KEY` in your environment ([get one here](https://www.tavily.com/
 ```python
 import os
 from deepagents import create_deep_agent
+from tavily import TavilyClient
 
 tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
@@ -276,7 +277,7 @@ agent = create_deep_agent(
 result = agent.invoke({"messages": [{"role": "user", "content": "What is LangGraph?"}]})
 ```
 
-The agent created with `create_deep_agent` is compiled [LangGraph StateGraph](https://docs.langchain.com/oss/python/langgraph/overview), so it can used it with streaming, human-in-the-loop, memory, or Studio just like any LangGraph agent. See our [quickstarts repo](https://github.com/langchain-ai/deepagents-quickstarts) for more examples.
+The agent created with `create_deep_agent` is compiled [LangGraph StateGraph](https://docs.langchain.com/oss/python/langgraph/overview), so it can be used with streaming, human-in-the-loop, memory, or Studio just like any LangGraph agent. See our [quickstarts repo](https://github.com/langchain-ai/deepagents-quickstarts) for more examples.
 
 ## Customizing Deep Agents
 
@@ -383,7 +384,7 @@ from deepagents import create_deep_agent
 research_subagent = {
     "name": "research-agent",
     "description": "Used to research in-depth questions",
-    "prompt": "You are an expert researcher",
+    "system_prompt": "You are an expert researcher",
     "tools": [internet_search],
     "model": "openai:gpt-5-mini",  # Optional, defaults to main agent model
 }
@@ -396,7 +397,7 @@ For complex cases, pass a pre-built LangGraph graph:
 ```python
 from deepagents import CompiledSubAgent, create_deep_agent
 
-custom_graph = create_agent(model=..., tools=..., prompt=...)
+custom_graph = create_agent(model=..., tools=..., system_prompt=...)
 
 agent = create_deep_agent(
     subagents=[CompiledSubAgent(
@@ -548,3 +549,9 @@ The middleware automatically adds instructions about the standard tools. Your cu
 - When to use sub-agents vs when NOT to use them
 - Guidance on parallel execution
 - Subagent lifecycle (spawn → run → return → reconcile)
+
+## Security Considerations
+
+### Trust Model
+
+Deepagents follows a "trust the LLM" model similar to Claude Code. The agent can perform any action the underlying tools allow. Security boundaries should be enforced at the tool/sandbox level, not by expecting the LLM to self-police.
