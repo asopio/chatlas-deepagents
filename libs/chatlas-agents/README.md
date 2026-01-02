@@ -13,6 +13,115 @@ AI agent framework for the ChATLAS AI RAG system using DeepAgents and LangChain.
 - 💾 **Conversation Persistence**: Built-in checkpointing for conversation memory
 - 🌊 **Streaming Support**: Stream agent responses in real-time
 - 📦 **uv Package Management**: Reproducible dependency management with uv
+- 🔗 **ACP Support**: Agent-Client Protocol server for IDE and application integration
+
+## Agent-Client Protocol (ACP) Integration
+
+ChATLAS agents now support the Agent-Client Protocol (ACP), enabling seamless integration with third-party interfaces like IDEs and chatbot applications.
+
+### What is ACP?
+
+The Agent-Client Protocol is a standardized protocol for connecting coding agents to client applications. It enables:
+
+- **IDE Integration**: Use ChATLAS agents directly in your favorite IDE (VSCode, JetBrains, Zed, etc.)
+- **Custom UIs**: Build custom interfaces for ChATLAS agents
+- **Third-party Apps**: Integrate with chatbot apps and other tools
+- **Standardized Communication**: JSON-RPC over stdio for reliable agent-client communication
+
+### Starting the ACP Server
+
+```bash
+# Basic usage (loads config from environment)
+chatlas-acp
+
+# Run setup to create configuration file
+chatlas-acp --setup
+
+# Enable verbose logging
+chatlas-acp --verbose
+```
+
+### Configuration
+
+The ACP server is configured via environment variables:
+
+```bash
+# Agent Configuration
+export CHATLAS_ACP_AGENT_ID=chatlas-acp
+export CHATLAS_ACP_MODEL=gpt-4
+
+# MCP Server Configuration
+export CHATLAS_MCP_URL=https://chatlas-mcp.app.cern.ch/mcp
+export CHATLAS_MCP_TIMEOUT=120
+
+# LLM API Keys
+export OPENAI_API_KEY=your-api-key
+# or
+export ANTHROPIC_API_KEY=your-api-key
+
+# Optional: Sandbox Configuration
+export CHATLAS_ACP_SANDBOX_TYPE=docker
+export CHATLAS_ACP_SANDBOX_IMAGE=python:3.13-slim
+
+# Optional: Agent Features
+export CHATLAS_ACP_ENABLE_MEMORY=true
+export CHATLAS_ACP_ENABLE_SKILLS=true
+export CHATLAS_ACP_ENABLE_SHELL=true
+
+# Optional: Agent Behavior
+export CHATLAS_ACP_DEFAULT_MODE=default  # or 'auto' or 'research'
+export CHATLAS_ACP_VERBOSE=false
+```
+
+Or create a `.env.chatlas-acp` file:
+
+```bash
+chatlas-acp --setup
+# Edit .env.chatlas-acp with your settings
+export $(cat .env.chatlas-acp | xargs)
+chatlas-acp
+```
+
+### Agent Modes
+
+The ACP server supports multiple agent modes:
+
+- **default**: Standard mode with human-in-the-loop approval for destructive operations
+- **auto**: Auto-approve mode that skips permission requests (use with caution)
+- **research**: Research-focused mode for information retrieval tasks
+
+Modes can be switched dynamically by the client during a session.
+
+### Programmatic Usage
+
+```python
+from chatlas_agents.acp import ACPConfig, run_acp_server
+
+# Create configuration
+config = ACPConfig(
+    agent_id="my-agent",
+    model="gpt-4",
+    mcp_url="https://chatlas-mcp.app.cern.ch/mcp",
+    mcp_timeout=120,
+    sandbox_type="docker",
+    enable_memory=True,
+    enable_skills=True,
+    verbose=True,
+)
+
+# Start ACP server
+run_acp_server(config)
+```
+
+### Integration with IDEs
+
+The ACP server can be integrated with any IDE that supports the Agent-Client Protocol:
+
+1. Configure your IDE to use `chatlas-acp` as the agent command
+2. Set up environment variables or use the `--setup` wizard
+3. Start coding with ChATLAS agent assistance directly in your IDE
+
+For more details, see the [ACP specification](https://agentclientprotocol.com/) and the example in `examples/acp_server_example.py`.
 
 ## TODO
 ### v0.3
