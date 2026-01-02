@@ -19,13 +19,19 @@ The ChATLAS agent is an AI-powered assistant that integrates with ATLAS experime
 chatlas-agents/
 ├── chatlas_agents/          # Main source code
 │   ├── agents/              # Agent wrapper and initialization
+│   ├── acp/                 # ACP server implementation (NEW)
+│   │   ├── __init__.py
+│   │   ├── config.py        # ACP configuration
+│   │   ├── server.py        # ChATLASACP agent class
+│   │   └── entrypoint.py    # CLI entry point
 │   ├── config/              # Configuration management (Settings, AgentConfig)
 │   ├── graph.py             # DeepAgent graph creation
 │   ├── llm/                 # LLM factory (OpenAI, Anthropic, Groq)
 │   ├── mcp/                 # MCP client integration (langchain-mcp-adapters)
+│   ├── middleware/          # Middleware components (MCP, etc.)
 │   ├── tools/               # Tool loading from MCP server
 │   ├── cli.py               # Command-line interface (typer)
-│   ├── sandbox.py           # Docker sandbox backend
+│   ├── sandbox.py           # Docker/Apptainer sandbox backends
 │   ├── htcondor.py          # HTCondor batch job submission
 │   └── __init__.py
 ├── .github/                 # GitHub templates and AI instructions
@@ -40,6 +46,41 @@ chatlas-agents/
 ```
 
 ## Critical Technical Details
+
+### ACP Integration (Agent-Client Protocol)
+
+The agent now supports ACP for integration with IDEs and applications.
+
+**Important:**
+- ACP server command: `chatlas-acp`
+- Communication: JSON-RPC over stdio
+- Protocol version: 0.6.0
+- Supports session management, streaming, and HITL permissions
+- Three agent modes: default (HITL), auto (auto-approve), research
+- Configuration via environment variables (CHATLAS_ACP_*)
+
+**ACP Implementation Pattern:**
+```python
+from chatlas_agents.acp import ACPConfig, run_acp_server
+
+# Create configuration
+config = ACPConfig(
+    agent_id="my-agent",
+    model="gpt-4",
+    mcp_url="https://chatlas-mcp.app.cern.ch/mcp",
+    enable_memory=True,
+    enable_skills=True,
+)
+
+# Start ACP server
+run_acp_server(config)
+```
+
+**Key Files:**
+- `chatlas_agents/acp/server.py` - ChATLASACP agent implementation
+- `chatlas_agents/acp/config.py` - Configuration model
+- `chatlas_agents/acp/entrypoint.py` - CLI entry point
+- `tests/test_acp.py` - ACP unit tests
 
 ### MCP Integration
 
@@ -97,6 +138,62 @@ grep -r "your_concept" chatlas_agents/
 ```
 
 ### Common Development Tasks
+
+#### Adding ACP Features
+
+When extending ACP functionality:
+
+```bash
+# 1. Update the ACP server implementation
+vim chatlas_agents/acp/server.py
+
+# 2. Add corresponding tests
+vim tests/test_acp.py
+
+# 3. Update configuration if needed
+vim chatlas_agents/acp/config.py
+
+# 4. Test with a real ACP client (or mock)
+pytest tests/test_acp.py -v
+
+# 5. Update documentation
+vim README.md
+vim AGENTS.md
+```
+
+**Common ACP Changes:**
+- Adding session capabilities: Update `initialize()` method
+- New session state: Extend `ACPSession` model
+- Custom streaming updates: Add handlers in `_stream_and_handle_updates()`
+- New permission types: Extend `_handle_interrupt()` logic
+- Configuration options: Add to `ACPConfig` and update `from_env()`
+
+**ACP Testing Pattern:**
+```python
+from chatlas_agents.acp.server import ChATLASACP
+from chatlas_agents.acp.config import ACPConfig
+
+# Create test config
+config = ACPConfig(
+    agent_id="test",
+    model="gpt-4",
+    mcp_url="http://test-mcp.local/mcp",
+)
+
+# Mock connection
+class FakeConnection:
+    def __init__(self):
+        self.calls = []
+    async def sessionUpdate(self, notification):
+        self.calls.append(notification)
+
+# Test ACP methods
+connection = FakeConnection()
+acp = ChATLASACP(connection, config)
+response = await acp.initialize(InitializeRequest(...))
+```
+
+#### Adding MCP Tools
 
 #### Adding a New LLM Provider
 
