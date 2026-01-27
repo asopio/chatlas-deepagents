@@ -26,3 +26,30 @@ async def load_mcp_tools(mcp_config: MCPServerConfig) -> List[Any]:
     
     # Delegate to the MCP client which now uses native interceptors
     return await create_mcp_client_and_load_tools(mcp_config)
+
+
+# Export ask_user_question components
+from chatlas_agents.tools.ask_user_question import (
+    AskUserQuestionTool,
+    Question,
+    Choice,
+    Answer,
+    AskUserQuestionInput,
+    AskUserQuestionResult,
+    UserInputCallback,
+    create_ask_user_question_tool,
+    ask_user_simple,
+)
+
+__all__ = [
+    "load_mcp_tools",
+    "AskUserQuestionTool",
+    "Question",
+    "Choice",
+    "Answer",
+    "AskUserQuestionInput",
+    "AskUserQuestionResult",
+    "UserInputCallback",
+    "create_ask_user_question_tool",
+    "ask_user_simple",
+]
