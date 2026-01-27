@@ -29,10 +29,32 @@ ChATLAS-specific features can be found in `libs/chatlas-agents`.
   - [x] Simple, preliminary solution: use deepagents skills to wrap command line tools that access ATLAS data sources.
   - [ ] Longer term: create proper MCP server with tools for ATLAS data sources (can interface this with other agent providers eg. Copilot).
 
-### v0.4+
+### v0.4+ (Mistral Vibe 2.0 Inspired Features)
+- [x] **AskUserQuestion Tool** - Interactive Q&A during agent execution (✅ Implemented)
+  - Allows agents to ask clarifying questions with multi-choice options
+  - Supports 1-4 questions with 2-4 options each plus automatic "Other" for free text
+  - See [examples/ask_user_question_example.py](libs/chatlas-agents/examples/ask_user_question_example.py)
+- [ ] **Agent Configuration System** - YAML/TOML-based agent profiles
+  - Different agent personas (explorer, planner, auto-approve, etc.)
+  - Safety levels and tool restrictions per agent
+  - Custom agent definitions in `~/.chatlas/agents/`
+- [ ] **Enhanced Session Management** - Separate metadata from messages
+  - Better session tracking and analytics
+  - Session resumption by ID prefix
+  - Cost and token usage tracking
+- [ ] **Skill System Improvements** - Enhanced skill discovery and configuration
+  - YAML frontmatter in skill files
+  - Multi-path skill discovery
+  - User-invocable slash commands
+- [ ] **MCP Configuration Enhancements** - Better MCP server support
+  - Environment variable injection for stdio servers
+  - Multiple transport types (HTTP, Streamable-HTTP, Stdio)
+  - Custom timeouts and authentication
 - [ ] Add GitLab remote. Set up CI/CD. Would be cool to have agents running in GitLab runners, eg. to produce automated reviews of paper latex sources.
   - Example: [Qwen-code GitHub actions](https://github.com/QwenLM/qwen-code-action) provides automated workflow for delegating tasks to agents, triggered thorugh local CLI commands or issue requests, and automatically places pull request on completion. Could be adapted to equivalent gitlab feaures through [GitLab MCP tools](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server_tools/).     
-- [ ] Integration of CLI with IDEs and other high-level interfaces through _Agent Client Protocol_ (see, for eaxmple, [__Qwen Code__ integration in Zed IDE](https://qwenlm.github.io/qwen-code-docs/en/users/integration-zed/) which can be used with own Open AI API keys, or [__Mistral Vibe__ simpler python-based ACP](https://github.com/mistralai/mistral-vibe/tree/main/vibe/acp).   
+- [ ] Integration of CLI with IDEs and other high-level interfaces through _Agent Client Protocol_ (see, for eaxmple, [__Qwen Code__ integration in Zed IDE](https://qwenlm.github.io/qwen-code-docs/en/users/integration-zed/) which can be used with own Open AI API keys, or [__Mistral Vibe__ simpler python-based ACP](https://github.com/mistralai/mistral-vibe/tree/main/vibe/acp).
+
+**Feature Analysis:** See [MISTRAL_VIBE_ANALYSIS.md](MISTRAL_VIBE_ANALYSIS.md) for detailed analysis of Mistral Vibe 2.0 features and implementation recommendations.   
 
 ## Quick Start
 
@@ -510,6 +532,45 @@ Every deep agent created with `create_deep_agent` comes with a standard set of t
 The `execute` tool is only available if the backend implements `SandboxBackendProtocol`. By default, it uses the in-memory state backend which does not support command execution. As shown, these tools (along with other capabilities) are provided by default middleware:
 
 See the [agent harness documentation](https://docs.langchain.com/oss/python/deepagents/harness) for more details on built-in tools and capabilities.
+
+## ChATLAS-Specific Tools
+
+In addition to the built-in DeepAgents tools, ChATLAS provides specialized tools:
+
+| Tool Name | Description | Status |
+|-----------|-------------|--------|
+| `ask_user_question` | Ask user clarifying questions with multi-choice options during execution | ✅ Available |
+| **MCP Tools** | Tools loaded from ChATLAS MCP server for searching ATLAS documentation | ✅ Available |
+
+### AskUserQuestion Tool
+
+The `ask_user_question` tool enables agents to interactively gather user input with structured questions:
+
+**Features:**
+- Ask 1-4 questions at once
+- Each question has 2-4 options plus automatic "Other" for free text
+- Multi-select support
+- Cancellation handling
+
+**Example Usage:**
+```python
+from chatlas_agents.tools import create_ask_user_question_tool, Question, Choice
+
+async def my_callback(questions):
+    # Display questions in your UI and get answers
+    return AskUserQuestionResult(answers=[...])
+
+tool = create_ask_user_question_tool(my_callback)
+agent = create_deep_agent(tools=[tool])
+```
+
+**Use Cases:**
+- Clarify user requirements before starting complex tasks
+- Get preferences for analysis frameworks, data types, etc.
+- Ask about priorities (speed vs readability, etc.)
+- Gather configuration choices interactively
+
+See [examples/ask_user_question_example.py](libs/chatlas-agents/examples/ask_user_question_example.py) for complete examples.
 
 ## Built-in Middleware
 
