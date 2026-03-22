@@ -11,6 +11,7 @@ import dotenv
 from rich.console import Console
 
 from deepagents_cli._version import __version__
+from chatlas_agents import __version__ as chatlas_agents_version
 
 dotenv.load_dotenv()
 
@@ -38,26 +39,40 @@ COLORS = {
 
 # ASCII art banner
 DEEP_AGENTS_ASCII = r"""
-[deep_sky_blue1]               ++============++               
-            +=====++[/deep_sky_blue1]        [deep_sky_blue1]++++++            
-          +++=-=[/deep_sky_blue1][bright_cyan]:::..[/bright_cyan]           [deep_sky_blue1]+++++         
-       ++++=+     [/deep_sky_blue1][bright_cyan]:::..[/bright_cyan]     [deep_sky_blue1]+++++  +=+++      
-      +++ +++       [/deep_sky_blue1][bright_cyan]:::.[/bright_cyan][deep_sky_blue1]+++++      [bright_cyan].::[/bright_cyan]=++[/deep_sky_blue1]      
-[magenta]  ____ _ [/magenta][cyan]          _______ _            _____ [/cyan][magenta]
- / ___| |      [/magenta][cyan] /\|__   __| |      /\  /  ___| [/cyan][magenta]
-| |   | |__   [/magenta][cyan] /  \  | |  | |     /  \ | (___  [/cyan][magenta]
-| |   | '_ \ [/magenta][cyan] / /\ \ | |  | |    / /\ \ \__  \ [/cyan][magenta]
-| |___| | | |[/magenta][cyan]/ ____ \| |  | |__ / ____ \___) | [/cyan][magenta]
- \____|_| |_[/magenta][cyan]/_/    \_\_|  |____/_/    \_\____/ 
-[/cyan]                                              
-[deep_sky_blue1]       ++++[/deep_sky_blue1][bright_cyan].:::[/bright_cyan]   [deep_sky_blue1]++++       [/deep_sky_blue1][bright_cyan]::::.[/bright_cyan] [bright_cyan]::[/bright_cyan][deep_sky_blue1]=+++      
-        ++++       +++++      [/deep_sky_blue1][bright_cyan]:::.[/bright_cyan][deep_sky_blue1].++++       
-         ++++         +++     [/deep_sky_blue1][bright_cyan].::[/bright_cyan][deep_sky_blue1]+==+         
-        +++++++       +++++[/deep_sky_blue1][bright_cyan]:.:[/bright_cyan][deep_sky_blue1]==++           
-       +++   ++++============+++              
-      ++====++[/deep_sky_blue1]
-[dim]AI Agents for ATLAS • Powered by DeepAgents[/dim]
+      ★       *        ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓     Version X.XX.X                                    
+   *     *         ▓▓▓▓▓▓▓▓▓▓     *     ▓▓▓▓▓▓▓▓▓▓      ★                           
+                ▓▓▓▓▓▓▓▓▓▓░░░░░               ▓▓▓▓▓▓▓         ˟                     
+ ★    *       ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░       ★        ▓▓▓▓▓▓     ★                       
+            ▓▓▓▓▓▓ ▓▓▓▓        ░░░░░      *        ▓▓▓▓▓▓                           
+           ▓▓▓▓▓   ▓▓▓▓           ░░░░      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓      ★                   
+         ▓▓▓▓   ˟   ▓▓▓    ˟         ░▓▓▓▓▓▓▓▓    ░░░░░░▓▓▓▓                        
+  *     ▓▓▓▓        ▓▓▓▓         ▓▓▓▓▓▓ ░░       ░░░░░   ▓▓▓▓                       
+       [magenta]█████╗ ██╗[/magenta]    ▓▓█████╗▓████████╗██╗░░  ░░█████╗  ██████╗
+      [magenta]██╔══██╗██║[/magenta]     ██╔══██╗╚══██╔══╝██║░░░░░██╔══██╗██╔════╝
+    ˟ [magenta]██║▓▓╚═╝███████╗[/magenta]███████║   ██║   ██║░░░░░███████║╚█████╗ * 
+      [magenta]██║▓ ██╗██╔══██║[/magenta]██╔══██║   ██║  ░██║░  ░░██╔══██║ ╚═══██╗
+ ★    [magenta]╚█████╔╝██║▓▓██║[/magenta]██║▓▓██║ ░░██║░░ ███████╗██║  ██║██████╔╝
+       [magenta]╚════╝▓╚═╝  ╚═╝[/magenta]╚═╝▓▓╚═╝░░ ╚═╝   ╚══════╝╚═╝  ╚═╝╚═════╝       
+         ▓▓▓▓▓▓         ░░▓▓▓▓▓    *          ░░░  ★ ★  ▓▓▓▓  *                     
+  *       ▓▓▓▓▓░░░░░░░░░░░░   ▓▓▓       ★     ░░░░     ▓▓▓▓                         
+       ˟   ▓▓▓▓▓▓░░░░          ▓▓▓▓           ░░░░   ▓▓▓▓▓                          
+            ▓▓▓▓▓▓     *    ˟    ▓▓▓▓▓    *   ░░░░ ▓▓▓▓▓▓   *                       
+      ★       ▓▓▓▓▓▓                ▓▓▓▓▓▓░░░░░░░▓▓▓▓▓▓                             
+ ˟              ▓▓▓▓     *    ★       ▓▓▓▓▓▓▓▓▓▓▓▓▓▓           ˟                   
+         *     ▓▓▓▓         ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓    *        ˟
+     ★        ▓▓▓▓   ▓▓▓▓▓▓▓▓▓▓▓▓▓                   
+            ▓▓▓▓   ▓▓▓▓            ‣ AI Agents for ATLAS ◂     
+       ˟  ▓▓▓▓▓▓▓▓▓▓▓      ‣ Powered by LangChain & DeepAgents ◂           
 """
+
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"▓", r"[deep_sky_blue1]▓[/deep_sky_blue1]")
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"░", r"[deep_sky_blue1]░[/deep_sky_blue1]")
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"*", r"[white]*[/white]")
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"★", r"[yellow]★[/yellow]")
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"˟", r"[cornsilk1]˟[/cornsilk1]")
+DEEP_AGENTS_ASCII = DEEP_AGENTS_ASCII.replace(r"Version X.XX.X", r"Version [bold green]" + chatlas_agents_version + "[/bold green]")
+
+
 
 # Interactive commands
 COMMANDS = {

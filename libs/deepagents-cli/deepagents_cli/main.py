@@ -218,7 +218,8 @@ async def simple_cli(
             console.print(f"  [dim]User code (shell) → '{settings.user_langchain_project}'[/dim]")
         console.print()
 
-    console.print("... Ready to code! What would you like to build?", style=COLORS["agent"])
+    # console.print("... Ready to code! What would you like to build?", style=COLORS["agent"])
+    console.print("... ChATLAS Deep Agent is ready!", style=COLORS["agent"])
 
     if sandbox_type:
         working_dir = get_default_working_dir(sandbox_type)
