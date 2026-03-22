@@ -6,11 +6,11 @@ This repository is a fork of the LangChain `deepagents` library, modified to int
 - **ATLAS software** compatible through SetupATLAS (on Lxplus).
 - **HTCondor integration** submit agent sandboxes to the HTCondor batch farm.
 
-ChATLAS-specific features can be found in `libs/chatlas-agents`. 
+ChATLAS-specific features can be found in `libs/chatlas-agents`.
 
 ## Proof of Concept feature plan (v0.3.0)
 - Provide a suite of skills, MCP tools to let agent users query ATLAS data sources (AMI, Rucio, Indico)
-- Create benchmarks to evaluate agent performance  
+- Create benchmarks to evaluate agent performance
   - Information retrieval w/ mutli-dimensional LLM as judge scoring (relevance, accuracy, completeness, conciseness) -- use ChATLAS RAG bench dataset (already available) -- compare score to basic RAG approach + commercial agent Copilot CLI
   - More "real-world" agent task: generate review comments on previous ATLAS paper drafts -- use LLM judge multi-dimensional scoring again -- compare to Copilot CLI + human comments scraped from CDS -- Also use LLM judge to test AI comment coverage vs. human comments
 
@@ -20,9 +20,9 @@ ChATLAS-specific features can be found in `libs/chatlas-agents`.
 - [ ] Fix known bugs:
   - [ ] Agent seems to get stuck sometimes when using MCP tools in interactive mode. Needs investigation.
   - [x] Not all tools seem to be available / configured properly with the chatlas agent. Web search tool seems to be missing, for example. Fixed by modifying MCPMiddleware and adding web search tools to CLI.
-- [ ] Properly set up docker and apptainer sandbox. 
+- [ ] Properly set up docker and apptainer sandbox.
   - [x] Sandboxes set up with new CLI and MCP middleware.
-  - [ ] Need to understand how to handle file transfers between host and sandbox. Implement this. 
+  - [ ] Need to understand how to handle file transfers between host and sandbox. Implement this.
   - [ ] Set up and test HTCondor submission.
   - [x] Alternative container solution: set up registry with chatlas-deepagents packages pre-installed, mount workdir into sandbox & tell agent to copy files there. -> Docker container has been set up on gitlab (`gitlab-registry.cern.ch/asopio/chatlas-deepagents/chatlas_deepagents`). Can be run with either docker (`docker runn -it`) or apptainer (`apptainer shell --docker-login`).
 - [ ] Interface with ATLAS software stack. Create local MCP, tools for ATLAS data sources: AMI, Rucio, Upcoming indico meetings
@@ -31,8 +31,8 @@ ChATLAS-specific features can be found in `libs/chatlas-agents`.
 
 ### v0.4+
 - [ ] Add GitLab remote. Set up CI/CD. Would be cool to have agents running in GitLab runners, eg. to produce automated reviews of paper latex sources.
-  - Example: [Qwen-code GitHub actions](https://github.com/QwenLM/qwen-code-action) provides automated workflow for delegating tasks to agents, triggered thorugh local CLI commands or issue requests, and automatically places pull request on completion. Could be adapted to equivalent gitlab feaures through [GitLab MCP tools](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server_tools/).     
-- [ ] Integration of CLI with IDEs and other high-level interfaces through _Agent Client Protocol_ (see, for eaxmple, [__Qwen Code__ integration in Zed IDE](https://qwenlm.github.io/qwen-code-docs/en/users/integration-zed/) which can be used with own Open AI API keys, or [__Mistral Vibe__ simpler python-based ACP](https://github.com/mistralai/mistral-vibe/tree/main/vibe/acp).   
+  - Example: [Qwen-code GitHub actions](https://github.com/QwenLM/qwen-code-action) provides automated workflow for delegating tasks to agents, triggered thorugh local CLI commands or issue requests, and automatically places pull request on completion. Could be adapted to equivalent gitlab feaures through [GitLab MCP tools](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server_tools/).
+- [ ] Integration of CLI with IDEs and other high-level interfaces through _Agent Client Protocol_ (see, for eaxmple, [__Qwen Code__ integration in Zed IDE](https://qwenlm.github.io/qwen-code-docs/en/users/integration-zed/) which can be used with own Open AI API keys, or [__Mistral Vibe__ simpler python-based ACP](https://github.com/mistralai/mistral-vibe/tree/main/vibe/acp).
 
 ## Quick Start
 
@@ -204,7 +204,7 @@ chatlas --sandbox apptainer --sandbox-image docker://python:3.13-slim
 
 **Module Documentation:**
 - **[libs/chatlas-agents/README.md](libs/chatlas-agents/README.md)** - ChATLAS agents module documentation
-- **[libs/chatlas-agents/SETUP.md](libs/chatlas-agents/SETUP.md)** - Detailed setup instructions 
+- **[libs/chatlas-agents/SETUP.md](libs/chatlas-agents/SETUP.md)** - Detailed setup instructions
 
 ### ATLAS Software Tools Skills
 
@@ -234,146 +234,135 @@ voms-proxy-init -voms atlas
 
 The skills are designed to work on the CERN LXPlus cluster with the full ATLAS software stack available via CVMFS. The agent can verify it's on LXPlus by checking `echo $HOSTNAME` (should match `lxplus*.cern.ch`).
 
---- 
+---
 
 # 🚀🧠 Deep Agents
 
-Agents can increasingly tackle long-horizon tasks, [with agent task length doubling every 7 months](https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/)! But, long horizon tasks often span dozens of tool calls, which present cost and reliability challenges. Popular agents such as [Claude Code](https://code.claude.com/docs) and [Manus](https://www.youtube.com/watch?v=6_BcCthVvb8) use some common principles to address these challenges, including **planning** (prior to task execution), **computer access** (giving the agent access to a shell and a filesystem), and **sub-agent delegation** (isolated task execution). `deepagents` is a simple agent harness that implements these tools, but is open source and easily extendable with your own custom tools and instructions.
+<div align="center">
+  <a href="https://docs.langchain.com/oss/python/deepagents/overview#deep-agents-overview">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/images/logo-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset=".github/images/logo-light.svg">
+      <img alt="Deep Agents Logo" src=".github/images/logo-dark.svg" width="50%">
+    </picture>
+  </a>
+</div>
 
-<img src=".github/images/deepagents_banner.png" alt="deep agent" width="100%"/>
+<div align="center">
+  <h3>The batteries-included agent harness.</h3>
+</div>
 
-## 📚 Resources
+<div align="center">
+  <a href="https://opensource.org/licenses/MIT" target="_blank"><img src="https://img.shields.io/pypi/l/deepagents" alt="PyPI - License"></a>
+  <a href="https://pypistats.org/packages/deepagents" target="_blank"><img src="https://img.shields.io/pepy/dt/deepagents" alt="PyPI - Downloads"></a>
+  <a href="https://pypi.org/project/deepagents/#history" target="_blank"><img src="https://img.shields.io/pypi/v/deepagents?label=%20" alt="Version"></a>
+  <a href="https://x.com/langchain" target="_blank"><img src="https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain" alt="Twitter / X"></a>
+</div>
 
-- **[Documentation](https://docs.langchain.com/oss/python/deepagents/overview)** - Full overview and API reference
-- **[Quickstarts Repo](https://github.com/langchain-ai/deepagents-quickstarts)** - Examples and use-cases
-- **[CLI](libs/deepagents-cli/)** - Interactive command-line interface with skills, memory, and HITL workflows
+<br>
 
-## 🚀 Quickstart
+Deep Agents is an agent harness. An opinionated, ready-to-run agent out of the box. Instead of wiring up prompts, tools, and context management yourself, you get a working agent immediately and customize what you need.
 
-You can give `deepagents` custom tools. Below, we'll optionally provide the `tavily` tool to search the web. This tool will be added to the `deepagents` build-in tools (see below).
+**What's included:**
+
+- **Planning** — `write_todos` for task breakdown and progress tracking
+- **Filesystem** — `read_file`, `write_file`, `edit_file`, `ls`, `glob`, `grep` for reading and writing context
+- **Shell access** — `execute` for running commands (with sandboxing)
+- **Sub-agents** — `task` for delegating work with isolated context windows
+- **Smart defaults** — Prompts that teach the model how to use these tools effectively
+- **Context management** — Auto-summarization when conversations get long, large outputs saved to files
+
+> [!NOTE]
+> Looking for the JS/TS library? Check out [deepagents.js](https://github.com/langchain-ai/deepagentsjs).
+
+## Quickstart
 
 ```bash
-pip install deepagents tavily-python
+pip install deepagents
+# or
+uv add deepagents
 ```
-
-Set `TAVILY_API_KEY` in your environment ([get one here](https://www.tavily.com/)):
 
 ```python
-import os
 from deepagents import create_deep_agent
-from tavily import TavilyClient
 
-tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
-
-def internet_search(query: str, max_results: int = 5):
-    """Run a web search"""
-    return tavily_client.search(query, max_results=max_results)
-
-agent = create_deep_agent(
-    tools=[internet_search],
-    system_prompt="Conduct research and write a polished report.",
-)
-
-result = agent.invoke({"messages": [{"role": "user", "content": "What is LangGraph?"}]})
+agent = create_deep_agent()
+result = agent.invoke({"messages": [{"role": "user", "content": "Research LangGraph and write a summary"}]})
 ```
 
-The agent created with `create_deep_agent` is compiled [LangGraph StateGraph](https://docs.langchain.com/oss/python/langgraph/overview), so it can be used with streaming, human-in-the-loop, memory, or Studio just like any LangGraph agent. See our [quickstarts repo](https://github.com/langchain-ai/deepagents-quickstarts) for more examples.
+The agent can plan, read/write files, and manage its own context. Add tools, customize prompts, or swap models as needed.
 
-## Customizing Deep Agents
+> [!TIP]
+> For developing, debugging, and deploying AI agents and LLM applications, see [LangSmith](https://docs.langchain.com/langsmith/home).
 
-There are several parameters you can pass to `create_deep_agent`.
+## Customization
 
-### `model`
-
-By default, `deepagents` uses `"claude-sonnet-4-5-20250929"`. You can customize this by passing any [LangChain model object](https://python.langchain.com/docs/integrations/chat/).
+Add your own tools, swap models, customize prompts, configure sub-agents, and more. See the [documentation](https://docs.langchain.com/oss/python/deepagents/overview) for full details.
 
 ```python
 from langchain.chat_models import init_chat_model
-from deepagents import create_deep_agent
 
-model = init_chat_model("openai:gpt-5-mini")
 agent = create_deep_agent(
-    model=model,
+    model=init_chat_model("openai:gpt-4o"),
+    tools=[my_custom_tool],
+    system_prompt="You are a research assistant.",
 )
 ```
 
-### `system_prompt`
+MCP is supported via [`langchain-mcp-adapters`](https://github.com/langchain-ai/langchain-mcp-adapters).
 
-You can provide a `system_prompt` parameter to `create_deep_agent()`. This custom prompt is **appended to** default instructions that are automatically injected by middleware.
+## Deep Agents CLI
 
-When writing a custom system prompt, you should:
+<p align="center">
+  <img src="libs/cli/images/cli.png" alt="Deep Agents CLI" width="600"/>
+</p>
 
-- ✅ Define domain-specific workflows (e.g., research methodology, data analysis steps)
-- ✅ Provide concrete examples for your use case
-- ✅ Add specialized guidance (e.g., "batch similar research tasks into a single TODO")
-- ✅ Define stopping criteria and resource limits
-- ✅ Explain how tools work together in your workflow
-
-**Don't:**
-
-- ❌ Re-explain what standard tools do (already covered by middleware)
-- ❌ Duplicate middleware instructions about tool usage
-- ❌ Contradict default instructions (work with them, not against them)
-
-```python
-from deepagents import create_deep_agent
-research_instructions = """your custom system prompt"""
-agent = create_deep_agent(
-    system_prompt=research_instructions,
-)
+```bash
+curl -LsSf https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/cli/scripts/install.sh | bash
 ```
 
-See our [quickstarts repo](https://github.com/langchain-ai/deepagents-quickstarts) for more examples.
+Web search, remote sandboxes, persistent memory, human-in-the-loop approval, and more. See the [CLI README](libs/cli/) for the full feature set.
 
-### `tools`
+## LangGraph Native
 
-Provide custom tools to your agent (in addition to [Built-in Tools](#built-in-tools)):
+`create_deep_agent` returns a compiled [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) graph. Use it with streaming, Studio, checkpointers, or any LangGraph feature.
 
-```python
-from deepagents import create_deep_agent
+## FAQ
 
-def internet_search(query: str) -> str:
-    """Run a web search"""
-    return tavily_client.search(query)
+### Why should I use this?
 
-agent = create_deep_agent(tools=[internet_search])
-```
+- **100% open source** — MIT licensed, fully extensible
+- **Provider agnostic** — Works with any Large Language Model that supports tool calling, including both frontier and open models
+- **Built on LangGraph** — Production-ready runtime with streaming, persistence, and checkpointing
+- **Batteries included** — Planning, file access, sub-agents, and context management work out of the box
+- **Get started in seconds** — `uv add deepagents` and you have a working agent
+- **Customize in minutes** — Add tools, swap models, tune prompts when you need to
 
-You can also connect MCP tools via [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters):
+---
 
-```python
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from deepagents import create_deep_agent
+## Documentation
 
-async def main():
-    mcp_client = MultiServerMCPClient(...)
-    mcp_tools = await mcp_client.get_tools()
-    agent = create_deep_agent(tools=mcp_tools)
+- [docs.langchain.com](https://docs.langchain.com/oss/python/deepagents/overview) – Comprehensive documentation, including conceptual overviews and guides
+- [reference.langchain.com/python](https://reference.langchain.com/python/deepagents/) – API reference docs for Deep Agents packages
+- [Chat LangChain](https://chat.langchain.com/) – Chat with the LangChain documentation and get answers to your questions
 
-    async for chunk in agent.astream({"messages": [{"role": "user", "content": "..."}]}):
-        chunk["messages"][-1].pretty_print()
-```
+**Discussions**: Visit the [LangChain Forum](https://forum.langchain.com) to connect with the community and share all of your technical questions, ideas, and feedback.
 
-### `middleware`
+## Additional resources
 
-Deep agents use [middleware](https://docs.langchain.com/oss/python/langchain/middleware) for extensibility (see [Built-in Tools](#built-in-tools) for defaults). Add custom middleware to inject tools, modify prompts, or hook into the agent lifecycle:
+- **[Examples](examples/)** — Working agents and patterns
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview) – Learn how to contribute to LangChain projects and find good first issues.
+- [Code of Conduct](https://github.com/langchain-ai/langchain/?tab=coc-ov-file) – Our community guidelines and standards for participation.
 
-```python
-from langchain_core.tools import tool
-from deepagents import create_deep_agent
-from langchain.agents.middleware import AgentMiddleware
+---
 
-@tool
-def get_weather(city: str) -> str:
-    """Get the weather in a city."""
-    return f"The weather in {city} is sunny."
+## Acknowledgements
 
-class WeatherMiddleware(AgentMiddleware):
-    tools = [get_weather]
+This project was primarily inspired by Claude Code, and initially was largely an attempt to see what made Claude Code general purpose, and make it even more so.
 
-agent = create_deep_agent(middleware=[WeatherMiddleware()])
-```
+## Security
 
+<<<<<<< HEAD
 ### `subagents`
 
 The main agent can delegate work to sub-agents via the `task` tool (see [Built-in Tools](#built-in-tools)). You can supply custom sub-agents for context isolation and custom instructions:
@@ -554,4 +543,5 @@ The middleware automatically adds instructions about the standard tools. Your cu
 
 ### Trust Model
 
-Deepagents follows a "trust the LLM" model similar to Claude Code. The agent can perform any action the underlying tools allow. Security boundaries should be enforced at the tool/sandbox level, not by expecting the LLM to self-police.
+Deep Agents follows a "trust the LLM" model. The agent can do anything its tools allow. Enforce boundaries at the tool/sandbox level, not by expecting the model to self-police. See the [security policy](https://github.com/langchain-ai/deepagents?tab=security-ov-file) for more information.
+
