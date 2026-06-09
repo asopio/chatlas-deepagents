@@ -1,0 +1,119 @@
+"""Shared helpers for resolving and inspecting chat models."""
+
+from __future__ import annotations
+
+import logging
+
+from langchain.chat_models import init_chat_model
+from langchain_core.language_models import BaseChatModel
+
+from deepagents.profiles.provider.provider_profiles import apply_provider_profile
+
+logger = logging.getLogger(__name__)
+
+
+def resolve_model(model: str | BaseChatModel) -> BaseChatModel:
+    """Resolve a model string to a `BaseChatModel`.
+
+    If `model` is already a `BaseChatModel`, returns it unchanged.
+
+    String models are resolved via `init_chat_model`, composed with any
+    provider-specific initialization behavior registered in the
+    `ProviderProfile` registry. Built-in registrations supply the OpenAI
+    Responses API default and OpenRouter app attribution headers; users can
+    layer additional providers or overrides via `register_provider_profile`.
+
+    Args:
+        model: Model string (e.g. `"openai:gpt-5.4"`) or pre-configured
+            `BaseChatModel` subclass instance.
+
+    Returns:
+        Resolved `BaseChatModel` instance.
+    """
+    if isinstance(model, BaseChatModel):
+        return model
+
+    return init_chat_model(model, **apply_provider_profile(model))
+
+
+def get_model_identifier(model: BaseChatModel) -> str | None:
+    """Extract the provider-native model identifier from a chat model.
+
+    Providers do not agree on a single field name for the identifier. Some use
+    `model_name`, while others use `model`.
+
+    Args:
+        model: Chat model instance to inspect.
+
+    Returns:
+        The configured model identifier, or `None` if it is unavailable.
+    """
+    return _string_attr(model, "model_name") or _string_attr(model, "model")
+
+
+def get_model_provider(model: BaseChatModel) -> str | None:
+    """Extract the provider name from a chat model instance.
+
+    Uses the model's `_get_ls_params` method. The base `BaseChatModel`
+    implementation derives `ls_provider` from the class name, and all major
+    providers override it with a hardcoded value (e.g. `"anthropic"`).
+
+    Args:
+        model: Chat model instance to inspect.
+
+    Returns:
+        The provider name, or `None` if unavailable.
+    """
+    try:
+        ls_params = model._get_ls_params()
+    except (AttributeError, TypeError, NotImplementedError) as exc:
+        # INFO rather than DEBUG: a missing or raising `_get_ls_params` causes
+        # profile resolution to silently miss for that model. Custom
+        # integrations need this to be visible at default log levels so users
+        # can debug "my profile isn't applying" without enabling DEBUG.
+        logger.info(
+            "Could not extract provider from %s.%s via _get_ls_params: %s",
+            type(model).__module__,
+            type(model).__name__,
+            exc,
+        )
+        return None
+    provider = ls_params.get("ls_provider")
+    if isinstance(provider, str) and provider:
+        return provider
+    return None
+
+
+def model_matches_spec(model: BaseChatModel, spec: str) -> bool:
+    """Check whether a model instance already matches a string model spec.
+
+    Matching is performed in two ways: first by exact string equality between
+    `spec` and the model identifier, then by comparing only the model-name
+    portion of a `provider:model` spec against the identifier. For example,
+    `"openai:gpt-5"` matches a model with identifier `"gpt-5"`.
+
+    Assumes the `provider:model` convention (single colon separator).
+
+    Args:
+        model: Chat model instance to inspect.
+        spec: Model spec in `provider:model` format (e.g., `openai:gpt-5`).
+
+    Returns:
+        `True` if the model already matches the spec, otherwise `False`.
+    """
+    current = get_model_identifier(model)
+    if current is None:
+        return False
+    if spec == current:
+        return True
+
+    _, separator, model_name = spec.partition(":")
+    return bool(separator) and model_name == current
+
+
+def _string_attr(obj: object, attr: str) -> str | None:
+    """Return a non-empty string attribute from `obj`, or `None`."""
+    value = getattr(obj, attr, None)
+    if isinstance(value, str) and value:
+        return value
+    return None

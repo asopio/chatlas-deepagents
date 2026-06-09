@@ -1,14 +1,17 @@
+import json
+from typing import ClassVar
+
 import pytest
 from langchain.agents.middleware import AgentMiddleware
-from langchain_core.messages import HumanMessage
+from langchain.agents.structured_output import ToolStrategy
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 
+from deepagents.backends.state import StateBackend
 from deepagents.graph import create_agent
-from deepagents.middleware.patch_tool_calls import PatchToolCallsMiddleware
 from deepagents.middleware.subagents import (
-    DEFAULT_GENERAL_PURPOSE_DESCRIPTION,
-    TASK_SYSTEM_PROMPT,
-    TASK_TOOL_DESCRIPTION,
+    GENERAL_PURPOSE_SUBAGENT,
     SubAgentMiddleware,
 )
 
@@ -20,7 +23,7 @@ def get_weather(city: str) -> str:
 
 
 class WeatherMiddleware(AgentMiddleware):
-    tools = [get_weather]
+    tools: ClassVar = [get_weather]
 
 
 def assert_expected_subgraph_actions(expected_tool_calls, agent, inputs):
@@ -36,7 +39,12 @@ def assert_expected_subgraph_actions(expected_tool_calls, agent, inputs):
             for tool_call in tool_calls:
                 if tool_call["name"] == expected_tool_calls[current_idx]["name"]:
                     if "model" in expected_tool_calls[current_idx]:
-                        assert ai_message.response_metadata["model_name"] == expected_tool_calls[current_idx]["model"]
+                        # Providers may return date-suffixed names
+                        expected_model = expected_tool_calls[current_idx]["model"]
+                        actual_model = ai_message.response_metadata["model_name"]
+                        assert actual_model == expected_model or actual_model.startswith(expected_model + "-"), (
+                            f"Expected model {expected_model!r}, got {actual_model!r}"
+                        )
                     for arg in expected_tool_calls[current_idx]["args"]:
                         assert arg in tool_call["args"]
                         assert tool_call["args"][arg] == expected_tool_calls[current_idx]["args"][arg]
@@ -50,57 +58,39 @@ class TestSubagentMiddleware:
 
     def test_general_purpose_subagent(self):
         agent = create_agent(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             system_prompt="Use the general-purpose subagent to get the weather in a city.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[get_weather],
-                )
-            ],
-        )
-        assert "task" in agent.nodes["tools"].bound._tools_by_name.keys()
-        response = agent.invoke({"messages": [HumanMessage(content="What is the weather in Tokyo?")]})
-        assert response["messages"][1].tool_calls[0]["name"] == "task"
-        assert response["messages"][1].tool_calls[0]["args"]["subagent_type"] == "general-purpose"
-
-    def test_defined_subagent(self):
-        agent = create_agent(
-            model="claude-sonnet-4-20250514",
-            system_prompt="Use the task tool to call a subagent.",
-            middleware=[
-                SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
+                    backend=StateBackend(),
                     subagents=[
                         {
-                            "name": "weather",
-                            "description": "This subagent can get weather in cities.",
-                            "system_prompt": "Use the get_weather tool to get the weather in a city.",
+                            **GENERAL_PURPOSE_SUBAGENT,
+                            "model": "claude-sonnet-4-6",
                             "tools": [get_weather],
                         }
                     ],
                 )
             ],
         )
-        assert "task" in agent.nodes["tools"].bound._tools_by_name.keys()
+        assert "task" in agent.nodes["tools"].bound._tools_by_name
         response = agent.invoke({"messages": [HumanMessage(content="What is the weather in Tokyo?")]})
         assert response["messages"][1].tool_calls[0]["name"] == "task"
-        assert response["messages"][1].tool_calls[0]["args"]["subagent_type"] == "weather"
+        assert response["messages"][1].tool_calls[0]["args"]["subagent_type"] == "general-purpose"
 
     def test_defined_subagent_tool_calls(self):
         agent = create_agent(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             system_prompt="Use the task tool to call a subagent.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
+                    backend=StateBackend(),
                     subagents=[
                         {
                             "name": "weather",
                             "description": "This subagent can get weather in cities.",
                             "system_prompt": "Use the get_weather tool to get the weather in a city.",
+                            "model": "claude-sonnet-4-6",
                             "tools": [get_weather],
                         }
                     ],
@@ -119,19 +109,18 @@ class TestSubagentMiddleware:
 
     def test_defined_subagent_custom_model(self):
         agent = create_agent(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             system_prompt="Use the task tool to call a subagent.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
+                    backend=StateBackend(),
                     subagents=[
                         {
                             "name": "weather",
                             "description": "This subagent can get weather in cities.",
                             "system_prompt": "Use the get_weather tool to get the weather in a city.",
                             "tools": [get_weather],
-                            "model": "gpt-4.1",
+                            "model": "gpt-5.4",
                         }
                     ],
                 )
@@ -141,9 +130,9 @@ class TestSubagentMiddleware:
             {
                 "name": "task",
                 "args": {"subagent_type": "weather"},
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
             },
-            {"name": "get_weather", "args": {}, "model": "gpt-4.1-2025-04-14"},
+            {"name": "get_weather", "args": {}, "model": "gpt-5.4"},
         ]
         assert_expected_subgraph_actions(
             expected_tool_calls,
@@ -153,19 +142,18 @@ class TestSubagentMiddleware:
 
     def test_defined_subagent_custom_middleware(self):
         agent = create_agent(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             system_prompt="Use the task tool to call a subagent.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
+                    backend=StateBackend(),
                     subagents=[
                         {
                             "name": "weather",
                             "description": "This subagent can get weather in cities.",
                             "system_prompt": "Use the get_weather tool to get the weather in a city.",
                             "tools": [],  # No tools, only in middleware
-                            "model": "gpt-4.1",
+                            "model": "gpt-5.4",
                             "middleware": [WeatherMiddleware()],
                         }
                     ],
@@ -176,9 +164,9 @@ class TestSubagentMiddleware:
             {
                 "name": "task",
                 "args": {"subagent_type": "weather"},
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
             },
-            {"name": "get_weather", "args": {}, "model": "gpt-4.1-2025-04-14"},
+            {"name": "get_weather", "args": {}, "model": "gpt-5.4"},
         ]
         assert_expected_subgraph_actions(
             expected_tool_calls,
@@ -188,17 +176,16 @@ class TestSubagentMiddleware:
 
     def test_defined_subagent_custom_runnable(self):
         custom_subagent = create_agent(
-            model="gpt-4.1-2025-04-14",
+            model="gpt-5.4",
             system_prompt="Use the get_weather tool to get the weather in a city.",
             tools=[get_weather],
         )
         agent = create_agent(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-6",
             system_prompt="Use the task tool to call a subagent.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
+                    backend=StateBackend(),
                     subagents=[
                         {
                             "name": "weather",
@@ -213,9 +200,9 @@ class TestSubagentMiddleware:
             {
                 "name": "task",
                 "args": {"subagent_type": "weather"},
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
             },
-            {"name": "get_weather", "args": {}, "model": "gpt-4.1-2025-04-14"},
+            {"name": "get_weather", "args": {}, "model": "gpt-5.4"},
         ]
         assert_expected_subgraph_actions(
             expected_tool_calls,
@@ -223,61 +210,56 @@ class TestSubagentMiddleware:
             {"messages": [HumanMessage(content="What is the weather in Tokyo?")]},
         )
 
-    def test_multiple_subagents_with_interrupt_on_no_middleware_accumulation(self):
+    def test_subagent_response_format_serialized_as_json(self):
+        """Test that subagent responseFormat produces JSON-serialized ToolMessage content.
+
+        Verifies the end-to-end flow when `response_format` is set directly on a
+        `SubAgent` spec: the subagent's `structured_response` is JSON-serialized
+        into the ToolMessage content returned to the parent agent.
+        """
+
+        class SubagentFindings(BaseModel):
+            findings: str = Field(description="The findings")
+            confidence: float = Field(description="Confidence score")
+            summary: str = Field(description="Brief summary")
+
         agent = create_agent(
             model="claude-sonnet-4-20250514",
-            system_prompt="Use the task tool to call subagents.",
+            system_prompt="You are an orchestrator. Always delegate tasks to the appropriate subagent via the task tool.",
             middleware=[
                 SubAgentMiddleware(
-                    default_model="claude-sonnet-4-20250514",
-                    default_tools=[],
-                    default_middleware=[PatchToolCallsMiddleware()],
+                    backend=StateBackend(),
                     subagents=[
                         {
-                            "name": "subagent1",
-                            "description": "First subagent.",
-                            "system_prompt": "You are subagent 1.",
-                            "tools": [get_weather],
-                            "interrupt_on": {"get_weather": True},
-                        },
-                        {
-                            "name": "subagent2",
-                            "description": "Second subagent.",
-                            "system_prompt": "You are subagent 2.",
-                            "tools": [get_weather],
-                            "interrupt_on": {"get_weather": True},
+                            "name": "foo",
+                            "description": "Call this when the user says 'foo'",
+                            "system_prompt": "You are a foo agent",
+                            "model": "claude-haiku-4-5",
+                            "tools": [],
+                            "response_format": ToolStrategy(schema=SubagentFindings),
                         },
                     ],
                 )
             ],
         )
-        # This would error if the default middleware was accumulated
-        assert True
 
-    def test_subagent_middleware_init(self):
-        middleware = SubAgentMiddleware(
-            default_model="gpt-4o-mini",
+        result = agent.invoke(
+            {"messages": [HumanMessage(content="foo - tell me how confident you are that pineapple belongs on pizza")]},
+            {"recursion_limit": 100},
         )
-        assert middleware is not None
-        assert middleware.system_prompt is TASK_SYSTEM_PROMPT
-        assert len(middleware.tools) == 1
-        assert middleware.tools[0].name == "task"
-        expected_desc = TASK_TOOL_DESCRIPTION.format(available_agents=f"- general-purpose: {DEFAULT_GENERAL_PURPOSE_DESCRIPTION}")
-        assert middleware.tools[0].description == expected_desc
 
-    def test_default_subagent_with_tools(self):
-        middleware = SubAgentMiddleware(
-            default_model="gpt-4o-mini",
-            default_tools=[],
-        )
-        assert middleware is not None
-        assert middleware.system_prompt == TASK_SYSTEM_PROMPT
+        agent_messages = [msg for msg in result["messages"] if isinstance(msg, AIMessage)]
+        tool_calls = [tc for msg in agent_messages for tc in (msg.tool_calls or [])]
+        assert any(tc["name"] == "task" and tc["args"].get("subagent_type") == "foo" for tc in tool_calls)
 
-    def test_default_subagent_custom_system_prompt(self):
-        middleware = SubAgentMiddleware(
-            default_model="gpt-4o-mini",
-            default_tools=[],
-            system_prompt="Use the task tool to call a subagent.",
-        )
-        assert middleware is not None
-        assert middleware.system_prompt == "Use the task tool to call a subagent."
+        task_tool_messages = [msg for msg in result["messages"] if msg.type == "tool" and msg.name == "task"]
+        assert len(task_tool_messages) > 0
+
+        task_tool_message = task_tool_messages[0]
+        parsed = json.loads(task_tool_message.content)
+        assert "findings" in parsed
+        assert "confidence" in parsed
+        assert "summary" in parsed
+        assert isinstance(parsed["findings"], str)
+        assert isinstance(parsed["confidence"], (int, float))
+        assert isinstance(parsed["summary"], str)

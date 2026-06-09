@@ -13,25 +13,30 @@ from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
+from pydantic import Field
 from typing_extensions import override
 
 
 class GenericFakeChatModel(BaseChatModel):
-    """Generic fake chat model that can be used to test the chat model interface.
+    r"""Generic fake chat model that can be used to test the chat model interface.
 
     * Chat model should be usable in both sync and async tests
     * Invokes `on_llm_new_token` to allow for testing of callback related code for new
         tokens.
     * Includes configurable logic to break messages into chunks for streaming.
+    * Tracks all invoke calls for inspection (messages, kwargs)
 
     Args:
         messages: An iterator over messages (use `iter()` to convert a list)
-        stream_delimiter: How to chunk content when streaming. Options:
+        stream_delimiter: How to chunk content when streaming.
+
+            Options:
+
             - None (default): Return content in a single chunk (no streaming)
             - A string delimiter (e.g., " "): Split content on this delimiter,
-              preserving the delimiter as separate chunks
+                preserving the delimiter as separate chunks
             - A regex pattern (e.g., r"(\\s)"): Split using the pattern with a capture
-              group to preserve delimiters
+                group to preserve delimiters
 
     Examples:
         # No streaming - single chunk
@@ -50,9 +55,15 @@ class GenericFakeChatModel(BaseChatModel):
             stream_delimiter=r"(\\s)"
         )
         # Yields: "Hello", " ", "world"
+
+        # Access call history
+        model = GenericFakeChatModel(messages=iter([AIMessage(content="Hello")]))
+        model.invoke([HumanMessage(content="Hi")])
+        print(model.call_history[0]["messages"])
+        print(model.call_history[0]["kwargs"])
     """
 
-    messages: Iterator[AIMessage | str]
+    messages: Iterator[AIMessage | str] = Field(exclude=True)
     """Get an iterator over messages.
 
     This can be expanded to accept other types like Callables / dicts / strings
@@ -60,7 +71,14 @@ class GenericFakeChatModel(BaseChatModel):
 
     !!! note
         if you want to pass a list, you can use `iter` to convert it to an iterator.
+
+    Excluded from pydantic serialization so that callers which dump this model
+    (e.g. LangSmith tracing with `mode="json"`) do not consume the iterator
+    before `_generate` pulls from it.
     """
+
+    call_history: list[Any] = []  # noqa: RUF012  # Test-only model class
+    tools: Sequence[dict[str, Any] | type | Callable | BaseTool] = ()
 
     stream_delimiter: str | None = None
     """Delimiter for chunking content during streaming.
@@ -70,6 +88,10 @@ class GenericFakeChatModel(BaseChatModel):
     - Regex pattern: Use re.split() with the pattern (use capture groups to preserve delimiters)
     """
 
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the fake chat model with call tracking."""
+        super().__init__(**kwargs)
+
     def bind_tools(
         self,
         tools: Sequence[dict[str, Any] | type | Callable | BaseTool],
@@ -78,6 +100,8 @@ class GenericFakeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, AIMessage]:
         """Override bind_tools to return self."""
+        # Please note that this code isn't thread safe!
+        self.tools = tools
         return self
 
     @override
@@ -88,12 +112,25 @@ class GenericFakeChatModel(BaseChatModel):
         run_manager: CallbackManagerForLLMRun | None = None,
         **kwargs: Any,
     ) -> ChatResult:
+        # Record this call
+        self.call_history.append(
+            {
+                "messages": messages,
+                "kwargs": {
+                    "stop": stop,
+                    "run_manager": run_manager,
+                    **kwargs,
+                },
+                "tools": self.tools,
+            }
+        )
+
         message = next(self.messages)
         message_ = AIMessage(content=message) if isinstance(message, str) else message
         generation = ChatGeneration(message=message_)
         return ChatResult(generations=[generation])
 
-    def _stream(
+    def _stream(  # noqa: C901, PLR0912  # Complex test helper with many message types
         self,
         messages: list[BaseMessage],
         stop: list[str] | None = None,
