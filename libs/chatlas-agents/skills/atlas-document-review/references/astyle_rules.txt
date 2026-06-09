@@ -1,0 +1,15 @@
+# ATLAS Style Checker Rules
+
+Source: `atlas_review_resources/astyle_rules.txt`
+
+This file preserves the style-check vocabulary and common issues used by the ATLAS style checker.
+
+## Representative checks
+
+- Prefer `use` over `utilize`.
+- Prefer `uses` over `utilizes`.
+- Prefer direct wording over inflated or vague phrasing.
+- Watch for double words and duplicated phrases.
+- Use consistent spelling, punctuation, quotation marks, and hyphenation.
+- Use proper LaTeX formatting for math subscripts, ranges, units, and quotes.
+- Avoid common grammar slips such as double articles, stray periods, and sentence fragments.
