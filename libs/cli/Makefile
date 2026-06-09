@@ -1,4 +1,4 @@
-.PHONY: format lint type typecheck test tests integration_test integration_tests test_watch benchmark help run lint_package lint_tests check_imports coverage
+.PHONY: format lint type typecheck test tests integration_test integration_tests test_watch help run lint_package lint_tests check_imports coverage
 
 .DEFAULT_GOAL := help
 
@@ -34,9 +34,6 @@ integration_test integration_tests:
 
 test_watch: ## Run tests in watch mode
 	uv run --group test ptw --now . -- -vv $(TEST_FILE)
-
-benchmark: ## Run benchmark tests
-	uv run --group test pytest ./tests -m benchmark
 
 run: ## Reinstall and run package
 	uvx --no-cache --reinstall .

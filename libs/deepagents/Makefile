@@ -1,4 +1,4 @@
-.PHONY: format lint test tests integration_test integration_tests test_watch benchmark help run lint_package lint_tests check_imports coverage type typecheck update-snapshots
+.PHONY: format lint test tests integration_test integration_tests test_watch benchmark bench bench-memory help run lint_package lint_tests check_imports coverage type typecheck update-snapshots
 
 .DEFAULT_GOAL := help
 
@@ -19,7 +19,8 @@ test: ## Run unit tests
 test tests:
 	uv run --group test pytest -n auto -vvv $(PYTEST_EXTRA) --disable-socket --allow-unix-socket $(TEST_FILE) \
 		--cov=deepagents \
-		--cov-report=term-missing
+		--cov-report=term-missing \
+		--benchmark-disable
 
 update-snapshots: ## Update smoke test snapshots
 	# update snapshots for smoke tests
@@ -34,14 +35,20 @@ coverage: ## Run unit tests with coverage
 
 integration_test: ## Run integration tests
 integration_test integration_tests:
-	uv run --group test pytest -n auto -vvv --timeout 30 $(TEST_FILE)
+	uv run --group test pytest -n auto -vvv --timeout 30 --benchmark-disable $(TEST_FILE)
 
 
 test_watch: ## Run tests in watch mode
 	uv run --group test ptw --now . -- -vv $(TEST_FILE)
 
 benchmark: ## Run benchmark tests
-	uv run --group test pytest ./tests -m benchmark
+	uv run --group test pytest ./tests/benchmarks -m benchmark
+
+bench: ## Run benchmarks under CodSpeed instrumentation
+	uv run --group test pytest ./tests/benchmarks -m benchmark --codspeed
+
+bench-memory: ## Run memory benchmarks under CodSpeed instrumentation
+	uv run --group test pytest ./tests/benchmarks -m memory_benchmark --codspeed
 
 run: ## Reinstall and run package
 	uvx --no-cache --reinstall .

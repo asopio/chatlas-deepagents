@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import importlib
 import json
 
 import pytest
 
+import deepagents_evals.radar as radar_module
 from deepagents_evals.radar import (
+    ALL_CATEGORIES,
     CATEGORY_LABELS,
     EVAL_CATEGORIES,
     ModelResult,
@@ -20,6 +23,27 @@ mpl = pytest.importorskip("matplotlib")
 mpl.use("Agg")
 
 
+def test_radar_import_handles_missing_matplotlib(monkeypatch: pytest.MonkeyPatch) -> None:
+    real_import_module = importlib.import_module
+
+    def fake_import_module(name: str, package: str | None = None) -> object:
+        if name == "matplotlib.pyplot":
+            msg = "No module named 'matplotlib'"
+            raise ModuleNotFoundError(msg)
+        return real_import_module(name, package)
+
+    try:
+        with monkeypatch.context() as mp:
+            mp.setattr(importlib, "import_module", fake_import_module)
+            reloaded = importlib.reload(radar_module)
+
+        assert reloaded.plt is None
+        with pytest.raises(ImportError, match="deepagents-evals\\[charts\\]"):
+            reloaded.generate_radar([reloaded.ModelResult(model="test", scores={})])
+    finally:
+        importlib.reload(radar_module)
+
+
 def test_toy_data_covers_all_categories():
     results = toy_data()
     assert len(results) >= 2
@@ -30,12 +54,13 @@ def test_toy_data_covers_all_categories():
 
 
 def test_category_labels_cover_all_categories():
-    assert set(CATEGORY_LABELS.keys()) == set(EVAL_CATEGORIES)
+    assert set(CATEGORY_LABELS.keys()) == set(ALL_CATEGORIES)
 
 
-def test_short_model_name_strips_provider():
-    assert _short_model_name("anthropic:claude-sonnet-4-6") == "claude-sonnet-4-6"
-    assert _short_model_name("openai:gpt-4.1") == "gpt-4.1"
+def test_short_model_name_uses_registry_display_name():
+    """Registered specs should render their curated display_name."""
+    assert _short_model_name("anthropic:claude-sonnet-4-6") == "Claude Sonnet 4.6"
+    assert _short_model_name("openai:gpt-5.4") == "GPT-5.4"
 
 
 def test_short_model_name_truncates_long():
@@ -48,11 +73,17 @@ def test_short_model_name_exact_boundary():
 
 
 def test_short_model_name_no_provider():
-    assert _short_model_name("gpt-4.1") == "gpt-4.1"
+    assert _short_model_name("gpt-5.4") == "gpt-5.4"
 
 
 def test_short_model_name_provider_and_long():
+    """Unregistered provider:model specs fall back to strip + truncate."""
     assert _short_model_name("provider:" + "x" * 50) == "x" * 27 + "..."
+
+
+def test_short_model_name_unregistered_spec_strips_provider():
+    """Unregistered but well-formed specs strip the provider prefix."""
+    assert _short_model_name("madeup_provider:my-model-v1") == "my-model-v1"
 
 
 # --- generate_radar ---
@@ -114,12 +145,12 @@ def test_generate_individual_radars_creates_per_model_files(tmp_path):
 def test_generate_individual_radars_filenames_are_safe(tmp_path):
     results = [
         ModelResult(model="anthropic:claude-sonnet-4-6", scores={"a": 0.5, "b": 0.8, "c": 0.3}),
-        ModelResult(model="openai:gpt-4.1", scores={"a": 0.6, "b": 0.7, "c": 0.4}),
+        ModelResult(model="openai:gpt-5.4", scores={"a": 0.6, "b": 0.7, "c": 0.4}),
     ]
     paths = generate_individual_radars(results, output_dir=tmp_path, categories=["a", "b", "c"])
     names = [p.stem for p in paths]
     assert "anthropic-claude-sonnet-4-6" in names
-    assert "openai-gpt-4.1" in names
+    assert "openai-gpt-5.4" in names
 
 
 def test_generate_individual_radars_single_model(tmp_path):
@@ -157,7 +188,7 @@ def test_load_results_from_summary_happy_path(tmp_path):
             "category_scores": {"file_operations": 0.85, "memory": 0.90},
         },
         {
-            "model": "openai:gpt-4.1",
+            "model": "openai:gpt-5.4",
             "category_scores": {"file_operations": 0.72, "memory": 0.80},
         },
     ]

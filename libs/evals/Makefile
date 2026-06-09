@@ -1,4 +1,4 @@
-.PHONY: lint format type typecheck test help test_integration test_watch run-hello-world run-terminal-bench-modal run-terminal-bench-docker run-terminal-bench-daytona run-terminal-bench-runloop evals format_unsafe radar radar-from-summary
+.PHONY: lint format type typecheck test help test_integration test_watch run-hello-world run-terminal-bench-modal run-terminal-bench-docker run-terminal-bench-daytona run-terminal-bench-runloop evals evals-trials format_unsafe radar radar-from-summary model-groups eval-catalog
 
 .DEFAULT_GOAL := help
 
@@ -13,8 +13,27 @@ PYTEST_EXTRA ?=
 test: ## Run unit tests
 	uv run --group test pytest $(PYTEST_EXTRA) --disable-socket --allow-unix-socket $(TEST_FILE)
 
-evals: ## Run evals
-	LANGSMITH_TEST_SUITE=deepagents-evals uv run --group test pytest tests/evals
+evals: ## Run evals (set MODEL=<id>; required)
+	@if [ -z "$(MODEL)" ]; then \
+		echo "ERROR: MODEL is required. Example: make evals MODEL=claude-opus-4-7" >&2; \
+		exit 1; \
+	fi
+	LANGSMITH_TEST_SUITE=deepagents-evals uv run --group test pytest tests/evals -v --tb=short --model $(MODEL) $(PYTEST_EXTRA)
+
+# Run the eval suite N times for the same MODEL/config and aggregate metrics
+# (mean / median / stdev / min / max). See scripts/run_trials.py for full options.
+TRIALS ?=
+TRIAL_ARGS ?=
+evals-trials: ## Run evals N times (set MODEL=<id> TRIALS=<n>; both required)
+	@if [ -z "$(MODEL)" ]; then \
+		echo "ERROR: MODEL is required. Example: make evals-trials MODEL=openai:gpt-5.5 TRIALS=5" >&2; \
+		exit 1; \
+	fi
+	@if [ -z "$(TRIALS)" ]; then \
+		echo "ERROR: TRIALS is required. Example: make evals-trials MODEL=openai:gpt-5.5 TRIALS=5" >&2; \
+		exit 1; \
+	fi
+	uv run --group test python scripts/run_trials.py --model $(MODEL) --trials $(TRIALS) $(TRIAL_ARGS)
 
 test_watch: ## Run tests in watch mode
 	uv run --group test ptw . -- $(TEST_FILE)
@@ -61,6 +80,20 @@ radar-from-summary: ## Generate radar chart from evals_summary.json
 	uv run --extra charts python scripts/generate_radar.py --summary $(SUMMARY_JSON) -o $(RADAR_OUTPUT)
 
 ######################
+# MODEL GROUPS
+######################
+
+model-groups: ## Regenerate MODEL_GROUPS.md from the canonical registry
+	uv run python scripts/generate_model_groups.py
+
+######################
+# EVAL CATALOG
+######################
+
+eval-catalog: ## Regenerate EVAL_CATALOG.md from eval test files
+	uv run python scripts/generate_eval_catalog.py
+
+######################
 # LINTING AND FORMATTING
 ######################
 
@@ -77,6 +110,7 @@ lint lint_diff:
 		fi; \
 	fi
 	$(MAKE) type PYTHON_FILES="$(PYTHON_FILES)"
+	uv run python scripts/generate_eval_catalog.py --check
 
 type: ## Run type checker (eval + harbor source + unit tests)
 type typecheck:
