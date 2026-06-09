@@ -6,7 +6,21 @@ This repository is a fork of the LangChain `deepagents` library, modified to int
 - **ATLAS software** compatible through SetupATLAS (on Lxplus).
 - **HTCondor integration** submit agent sandboxes to the HTCondor batch farm.
 
-ChATLAS-specific features can be found in `libs/chatlas-agents`. 
+**ChATLAS-specific features can be found in `libs/chatlas-agents`.**
+
+## TODOs June 2026 
+- **Work in progress** Update for compatibility with deepagents v0.6 
+  - Adds a lot of features that were previously missing in base deepagents package: eg. MCP, ACP -- need to make sure that we use the native functionality for these features instead of custom implementations, and remove any redundant code.
+- **In the meantime** A lot CLI functionality can be already achieved using the standard deepagents CLI -- now called `deepagents-code` (or `dcode`), Install & run simply with 
+```bash
+pip install deepagents-code
+dcode
+```
+- Only need to provide an LLM API key by setting the `OPENAI_API_KEY` environment variable. 
+- Custom skills live in: `$HOME/.deepagents/agent/skills/`
+  - Can simply copy our custom skills from `libs/chatlas-agents/skills` to this directory and use them with the spanking new deepagents-code CLI -- it is very user-friendly and has nearly all the features of propritary coding agents (eg. Copilot CLI, Calude Code).
+
+--- 
 
 ## Proof of Concept feature plan (v0.3.0)
 - Provide a suite of skills, MCP tools to let agent users query ATLAS data sources (AMI, Rucio, Indico)
