@@ -674,12 +674,12 @@ _UNICODE_BANNER = r"""
            ▓▓▓▓▓   ▓▓▓▓           ░░░░      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓      ★
          ▓▓▓▓   ˟   ▓▓▓    ˟         ░▓▓▓▓▓▓▓▓    ░░░░░░▓▓▓▓
   *     ▓▓▓▓        ▓▓▓▓         ▓▓▓▓▓▓ ░░       ░░░░░   ▓▓▓▓
-       [magenta]█████╗ ██╗[/magenta]    ▓▓█████╗▓████████╗██╗░░  ░░█████╗  ██████╗
-      [magenta]██╔══██╗██║[/magenta]     ██╔══██╗╚══██╔══╝██║░░░░░██╔══██╗██╔════╝
-    ˟ [magenta]██║▓▓╚═╝███████╗[/magenta]███████║   ██║   ██║░░░░░███████║╚█████╗ *
-      [magenta]██║▓ ██╗██╔══██║[/magenta]██╔══██║   ██║  ░██║░  ░░██╔══██║ ╚═══██╗
- ★    [magenta]╚█████╔╝██║▓▓██║[/magenta]██║▓▓██║ ░░██║░░ ███████╗██║  ██║██████╔╝
-       [magenta]╚════╝▓╚═╝  ╚═╝[/magenta]╚═╝▓▓╚═╝░░ ╚═╝   ╚══════╝╚═╝  ╚═╝╚═════╝
+       █████╗ ██╗    ▓▓█████╗▓████████╗██╗░░  ░░█████╗  ██████╗
+      ██╔══██╗██║     ██╔══██╗╚══██╔══╝██║░░░░░██╔══██╗██╔════╝
+    ˟ ██║▓▓╚═╝███████╗███████║   ██║   ██║░░░░░███████║╚█████╗ *
+      ██║▓ ██╗██╔══██║██╔══██║   ██║  ░██║░  ░░██╔══██║ ╚═══██╗
+ ★    ╚█████╔╝██║▓▓██║██║▓▓██║ ░░██║░░ ███████╗██║  ██║██████╔╝
+       ╚════╝▓╚═╝  ╚═╝╚═╝▓▓╚═╝░░ ╚═╝   ╚══════╝╚═╝  ╚═╝╚═════╝
          ▓▓▓▓▓▓         ░░▓▓▓▓▓    *          ░░░  ★ ★  ▓▓▓▓  *
   *       ▓▓▓▓▓░░░░░░░░░░░░   ▓▓▓       ★     ░░░░     ▓▓▓▓
        ˟   ▓▓▓▓▓▓░░░░          ▓▓▓▓           ░░░░   ▓▓▓▓▓
@@ -689,16 +689,18 @@ _UNICODE_BANNER = r"""
          *     ▓▓▓▓         ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓    *        ˟
      ★        ▓▓▓▓   ▓▓▓▓▓▓▓▓▓▓▓▓▓
             ▓▓▓▓   ▓▓▓▓            ‣ AI Agents for ATLAS ◂
-       ˟  ▓▓▓▓▓▓▓▓▓▓▓      ‣ Powered by LangChain & DeepAgents ◂
+       ˟  ▓▓▓▓▓▓▓▓▓▓▓      ‣ Powered by LangChain DeepAgents ◂
 """
 
 chatlas_agents_version = "0.3.0-rc0"
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"▓", r"[deep_sky_blue1]▓[/deep_sky_blue1]")
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"░", r"[deep_sky_blue1]░[/deep_sky_blue1]")
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"*", r"[white]*[/white]")
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"★", r"[yellow]★[/yellow]")
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"˟", r"[cornsilk1]˟[/cornsilk1]")
-_UNICODE_BANNER = _UNICODE_BANNER.replace(r"Version X.XX.X", r"Version [bold green]" + chatlas_agents_version + "[/bold green]")
+#### Can't override colors here for the moment
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"▓", r"[deep_sky_blue1]▓[/deep_sky_blue1]")
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"░", r"[deep_sky_blue1]░[/deep_sky_blue1]")
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"*", r"[white]*[/white]")
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"★", r"[yellow]★[/yellow]")
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"˟", r"[cornsilk1]˟[/cornsilk1]")
+# _UNICODE_BANNER = _UNICODE_BANNER.replace(r"Version X.XX.X", r"Version [bold green]" + chatlas_agents_version + "[/bold green]")
+_UNICODE_BANNER = _UNICODE_BANNER.replace(r"Version X.XX.X", "Version " + chatlas_agents_version)
 
 _ASCII_BANNER = f"""
  ____  ____  ____  ____
