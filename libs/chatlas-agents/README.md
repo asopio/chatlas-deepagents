@@ -6,6 +6,7 @@ AI agent framework for the ChATLAS AI RAG system using DeepAgents and LangChain.
 
 - 🚀 **DeepAgents Framework**: Built on LangChain's DeepAgents with planning, file operations, and sub-agent spawning
 - 🔌 **Native MCP Support**: MCPMiddleware for seamless integration with Model Context Protocol servers
+- 📊 **Benchmark Evaluation**: LLM-as-judge evaluation framework with Opik integration for performance tracking
 - 🐳 **Container Sandboxes**: Run agents in isolated containers for secure code execution (Docker & Apptainer)
 - ⚡ **HTCondor Integration**: Submit batch jobs to CERN's HTCondor batch farm system
 - 🧠 **Multiple LLM Backends**: Support for OpenAI, Anthropic Claude, and Groq
@@ -450,6 +451,34 @@ Options:
 python -m chatlas_agents.cli version
 ```
 
+### Benchmark Evaluation
+```bash
+python -m chatlas_agents.cli benchmark [OPTIONS]
+
+# Or use directly:
+chatlas benchmark [OPTIONS]
+
+Options:
+  -f, --csv-file PATH             Path to CSV benchmark file [required]
+  -c, --config PATH               Agent configuration YAML file
+  --judge-model TEXT              Model for LLM judge [default: gpt-5-mini]
+  --judge-provider TEXT           Provider for judge (openai/anthropic/groq) [default: openai]
+  -o, --output PATH               Output JSON file path
+  -n, --max-items INTEGER         Maximum items to evaluate
+  --no-opik                       Disable Opik tracking
+  -v, --verbose                   Enable verbose logging
+
+Examples:
+  # Run benchmark with default settings
+  chatlas benchmark --csv-file benchmarks/test.csv
+  
+  # Save results and use custom judge
+  chatlas benchmark -f benchmarks/test.csv -o results.json --judge-model claude-3-5-sonnet-20241022 --judge-provider anthropic
+  
+  # Test on subset without Opik
+  chatlas benchmark -f benchmarks/test.csv --max-items 5 --no-opik
+```
+
 ### HTCondor Batch Job Submission
 
 Submit ChATLAS agent jobs to CERN's HTCondor batch farm system:
@@ -540,6 +569,60 @@ python examples/deepagent_example.py
 # For Apptainer (requires apptainer installed)
 python examples/apptainer_sandbox_example.py
 ```
+
+## Benchmark Evaluation
+
+ChATLAS agents include a comprehensive evaluation framework using LLM-as-judge scoring and Opik integration.
+
+### Quick Start
+
+1. **Prepare benchmark data** in CSV format:
+```csv
+prompt,expected_answer,category
+"What is ATLAS?","ATLAS is a particle physics detector at CERN...",physics
+"How to use Rucio?","Rucio is the data management system...",technical
+```
+
+2. **Run the benchmark**:
+```bash
+# Using CLI command
+chatlas benchmark \
+  --csv-file benchmarks/my_benchmark.csv \
+  --judge-model gpt-5-mini \
+  --output results/results.json
+
+# Or as a Python module
+python -m chatlas_agents.benchmark.evaluate \
+  --csv-file benchmarks/my_benchmark.csv \
+  --output results.json
+```
+
+### Features
+
+- **LLM-as-Judge**: Evaluates responses on 4 dimensions (accuracy, relevance, coverage, conciseness)
+- **Opik Integration**: Tracks all evaluations for reproducibility and monitoring
+- **CSV-based**: Simple format for defining benchmarks
+- **Rich reporting**: Summary tables and detailed JSON results
+
+### Example Output
+
+```
+Benchmark Evaluation Summary
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ Metric           ┃    Score ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ Overall Average  │ 4.25/5.0 │
+│                  │          │
+│ Accuracy         │ 4.50/5.0 │
+│ Relevance        │ 4.30/5.0 │
+│ Coverage         │ 4.10/5.0 │
+│ Conciseness      │ 4.10/5.0 │
+│                  │          │
+│ Total Items      │       10 │
+└──────────────────┴──────────┘
+```
+
+For detailed documentation, see [`chatlas_agents/benchmark/README.md`](chatlas_agents/benchmark/README.md).
 
 ## Architecture
 

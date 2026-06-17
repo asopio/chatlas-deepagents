@@ -381,5 +381,86 @@ def version():
     console.print("[dim]Built on DeepAgents framework with MCP integration[/dim]")
 
 
+@app.command()
+def benchmark(
+    csv_file: Path = typer.Option(
+        ...,
+        "--csv-file",
+        "-f",
+        help="Path to CSV file with benchmark data (columns: prompt, expected_answer)"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Path to agent configuration YAML file"
+    ),
+    judge_model: str = typer.Option(
+        "gpt-5-mini",
+        "--judge-model",
+        help="Model name for LLM judge"
+    ),
+    judge_provider: str = typer.Option(
+        "openai",
+        "--judge-provider",
+        help="LLM provider for judge (openai, anthropic, groq)"
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Path to save results JSON file"
+    ),
+    max_items: Optional[int] = typer.Option(
+        None,
+        "--max-items",
+        "-n",
+        help="Maximum number of items to evaluate"
+    ),
+    no_opik: bool = typer.Option(
+        False,
+        "--no-opik",
+        help="Disable Opik tracking"
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable verbose logging"
+    ),
+):
+    """Run benchmark evaluation on ChATLAS agent.
+    
+    Evaluates the agent using CSV benchmark data and LLM-as-judge scoring.
+    Tracks results with Opik for reproducibility and monitoring.
+    
+    Example:
+        chatlas benchmark --csv-file benchmarks/my_benchmark.csv --output results.json
+    """
+    setup_logging(verbose)
+    
+    from chatlas_agents.benchmark import run_benchmark
+    
+    try:
+        asyncio.run(
+            run_benchmark(
+                csv_file=csv_file,
+                agent_config_file=config,
+                judge_model_name=judge_model,
+                judge_provider=judge_provider,
+                output_file=output,
+                max_items=max_items,
+                use_opik=not no_opik,
+            )
+        )
+        console.print("\n[green]✓ Benchmark evaluation completed![/green]")
+    except Exception as e:
+        console.print(f"\n[red]✗ Benchmark evaluation failed: {e}[/red]")
+        if verbose:
+            import traceback
+            traceback.print_exc()
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()
